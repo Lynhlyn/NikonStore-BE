@@ -1,8 +1,10 @@
 package com.example.nikonbe.common.exceptions;
 
 import java.util.Map;
-import lombok.Getter;
+
 import org.springframework.http.HttpStatus;
+
+import lombok.Getter;
 
 @Getter
 public class ValidationException extends BaseException {
