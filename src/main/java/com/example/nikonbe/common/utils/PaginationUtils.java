@@ -1,7 +1,8 @@
 package com.example.nikonbe.common.utils;
 
-import com.example.nikonbe.common.response.PaginationResponse;
 import org.springframework.data.domain.Page;
+
+import com.example.nikonbe.common.response.PaginationResponse;
 
 public class PaginationUtils {
 
