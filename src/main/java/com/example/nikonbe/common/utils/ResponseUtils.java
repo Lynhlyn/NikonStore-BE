@@ -1,13 +1,11 @@
 package com.example.nikonbe.common.utils;
 
+import com.example.nikonbe.common.response.ApiResponseDto;
+import com.example.nikonbe.common.response.PaginationResponse;
 import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import com.example.nikonbe.common.response.ApiResponseDto;
-import com.example.nikonbe.common.response.PaginationResponse;
 
 public class ResponseUtils {
 
