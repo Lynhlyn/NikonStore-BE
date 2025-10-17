@@ -18,7 +18,8 @@ public class PaginationUtils {
   }
 
   public static Pageable createPageable(int page, int size, String sort, String direction) {
-    Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+    Sort.Direction sortDirection =
+        "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
     return PageRequest.of(page, size, Sort.by(sortDirection, sort));
   }
 }
