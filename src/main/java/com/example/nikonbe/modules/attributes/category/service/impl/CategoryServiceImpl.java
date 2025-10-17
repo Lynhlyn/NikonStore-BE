@@ -93,7 +93,6 @@ public class CategoryServiceImpl implements CategoryService {
       throw new ValidationException("Validation failed", errors);
     }
 
-    Status oldStatus = category.getStatus();
     categoryMapper.updateEntityFromDto(dto, category);
     Category updated = categoryRepository.save(category);
 
