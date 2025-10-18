@@ -2,6 +2,7 @@ package com.example.nikonbe.modules.voucher.entity;
 
 import com.example.nikonbe.common.base.BaseEntity;
 import com.example.nikonbe.common.enums.Status;
+import com.example.nikonbe.common.utils.StatusConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -62,7 +63,7 @@ public class Voucher extends BaseEntity {
 
   @Builder.Default
   @NotNull(message = "Trạng thái không được để trống")
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = StatusConverter.class)
   @Column(name = "status", nullable = false)
   private Status status = Status.ACTIVE;
 

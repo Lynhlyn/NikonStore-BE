@@ -22,7 +22,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
   boolean existsByCodeAndIdNot(String code, Long id);
 
   @Query(
-      "SELECT v FROM Voucher v WHERE v.status = 'ACTIVE' AND v.isPublic = true AND v.startDate <= :now AND v.endDate >= :now")
+      "SELECT v FROM Voucher v WHERE v.status = com.example.nikonbe.common.enums.Status.ACTIVE AND v.isPublic = true AND v.startDate <= :now AND v.endDate >= :now")
   List<Voucher> findPublicActiveVouchers(@Param("now") LocalDateTime now);
 
   @Query(
@@ -46,11 +46,11 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
   List<Voucher> findByDiscountType(String discountType);
 
   @Query(
-      "SELECT COUNT(v) FROM Voucher v WHERE v.status = 'ACTIVE' AND v.startDate <= :now AND v.endDate >= :now")
+      "SELECT COUNT(v) FROM Voucher v WHERE v.status = com.example.nikonbe.common.enums.Status.ACTIVE AND v.startDate <= :now AND v.endDate >= :now")
   Long countActiveVouchers(@Param("now") LocalDateTime now);
 
   @Query(
-      "SELECT v FROM Voucher v WHERE v.status = 'ACTIVE' AND v.endDate BETWEEN :now AND :futureDate")
+      "SELECT v FROM Voucher v WHERE v.status = com.example.nikonbe.common.enums.Status.ACTIVE AND v.endDate BETWEEN :now AND :futureDate")
   List<Voucher> findVouchersExpiringWithin(
       @Param("now") LocalDateTime now, @Param("futureDate") LocalDateTime futureDate);
 }

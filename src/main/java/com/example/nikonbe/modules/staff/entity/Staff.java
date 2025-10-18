@@ -3,6 +3,7 @@ package com.example.nikonbe.modules.staff.entity;
 import com.example.nikonbe.common.base.BaseEntity;
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.enums.UserRole;
+import com.example.nikonbe.common.utils.StatusConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -49,7 +50,7 @@ public class Staff extends BaseEntity {
   private UserRole role;
 
   @NotNull(message = "Trạng thái không được để trống")
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = StatusConverter.class)
   @Column(nullable = false)
   private Status status;
 }
