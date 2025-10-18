@@ -21,8 +21,6 @@ public interface VoucherMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "status", constant = "ACTIVE")
   @Mapping(target = "usedCount", constant = "0")
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   Voucher toEntity(VoucherCreateDTO dto);
 
   @Mapping(target = "id", ignore = true)
