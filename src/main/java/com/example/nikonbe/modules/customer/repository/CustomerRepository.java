@@ -32,6 +32,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
   Optional<Customer> findByUsername(String username);
 
+  @Query("SELECT c FROM Customer c WHERE c.email = :keyword OR c.username = :keyword")
   Optional<Customer> findByEmailOrUsername(@Param("keyword") String keyword);
 
   Optional<Customer> findByProviderAndProviderId(String provider, String providerId);
