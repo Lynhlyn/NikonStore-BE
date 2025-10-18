@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,7 +85,7 @@ public class CustomerController {
       responseCode = "200",
       description = "Customers retrieved successfully",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-  public ResponseEntity<ApiResponseDto<Page<CustomerResponseDTO>>> getAll(
+  public ResponseEntity<ApiResponseDto<List<CustomerResponseDTO>>> getAll(
       @Parameter(description = "Search keyword") @RequestParam(required = false) String keyword,
       @Parameter(description = "Filter by status") @RequestParam(required = false) Status status,
       @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
