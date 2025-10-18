@@ -2,10 +2,9 @@ package com.example.nikonbe.modules.customer.dto.response;
 
 import com.example.nikonbe.common.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Data
 @Builder

@@ -18,7 +18,8 @@ public interface CustomerService {
 
   Page<CustomerResponseDTO> getAll(String keyword, Status status, Pageable pageable);
 
-  Page<CustomerResponseDTO> getCustomersWithAdvancedFilters(CustomerFilterDTO filterDTO, Pageable pageable);
+  Page<CustomerResponseDTO> getCustomersWithAdvancedFilters(
+      CustomerFilterDTO filterDTO, Pageable pageable);
 
   void delete(Integer id);
 

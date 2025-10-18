@@ -39,21 +39,21 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
   Optional<Customer> findByEmailAndProvider(String email, String provider);
 
   @Query(
-      "SELECT c FROM Customer c WHERE " +
-      "(:keyword IS NULL OR " +
-      "LOWER(c.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-      "LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-      "LOWER(c.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-      "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-      "AND (:status IS NULL OR c.status = :status) " +
-      "AND (:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%'))) " +
-      "AND (:phoneNumber IS NULL OR c.phoneNumber LIKE CONCAT('%', :phoneNumber, '%')) " +
-      "AND (:fullName IS NULL OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) " +
-      "AND (:gender IS NULL OR LOWER(c.gender) LIKE LOWER(CONCAT('%', :gender, '%'))) " +
-      "AND (:provider IS NULL OR LOWER(c.provider) = LOWER(:provider)) " +
-      "AND (:isGuest IS NULL OR c.isGuest = :isGuest) " +
-      "AND (:createdFromDate IS NULL OR DATE(c.createdAt) >= :createdFromDate) " +
-      "AND (:createdToDate IS NULL OR DATE(c.createdAt) <= :createdToDate)")
+      "SELECT c FROM Customer c WHERE "
+          + "(:keyword IS NULL OR "
+          + "LOWER(c.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(c.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
+          + "AND (:status IS NULL OR c.status = :status) "
+          + "AND (:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%'))) "
+          + "AND (:phoneNumber IS NULL OR c.phoneNumber LIKE CONCAT('%', :phoneNumber, '%')) "
+          + "AND (:fullName IS NULL OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) "
+          + "AND (:gender IS NULL OR LOWER(c.gender) LIKE LOWER(CONCAT('%', :gender, '%'))) "
+          + "AND (:provider IS NULL OR LOWER(c.provider) = LOWER(:provider)) "
+          + "AND (:isGuest IS NULL OR c.isGuest = :isGuest) "
+          + "AND (:createdFromDate IS NULL OR DATE(c.createdAt) >= :createdFromDate) "
+          + "AND (:createdToDate IS NULL OR DATE(c.createdAt) <= :createdToDate)")
   Page<Customer> findByAdvancedFilters(
       @Param("keyword") String keyword,
       @Param("status") Status status,
@@ -68,14 +68,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
       Pageable pageable);
 
   @Query(
-      "SELECT c FROM Customer c WHERE " +
-      "(:keyword IS NULL OR " +
-      "LOWER(c.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-      "LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-      "LOWER(c.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-      "AND (:status IS NULL OR c.status = :status)")
+      "SELECT c FROM Customer c WHERE "
+          + "(:keyword IS NULL OR "
+          + "LOWER(c.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(c.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
+          + "AND (:status IS NULL OR c.status = :status)")
   Page<Customer> findByFilters(
-      @Param("keyword") String keyword, 
-      @Param("status") Status status, 
-      Pageable pageable);
+      @Param("keyword") String keyword, @Param("status") Status status, Pageable pageable);
 }

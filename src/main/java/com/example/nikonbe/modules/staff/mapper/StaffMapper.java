@@ -9,18 +9,17 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface StaffMapper {
+
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "password", ignore = true)
   @Mapping(target = "status", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "role", ignore = true)
   Staff toEntity(StaffCreateDTO dto);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "username", ignore = true)
   @Mapping(target = "password", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "role", ignore = true)
   void updateEntityFromDto(StaffUpdateDTO dto, @MappingTarget Staff entity);
 
   StaffResponseDTO toDto(Staff entity);

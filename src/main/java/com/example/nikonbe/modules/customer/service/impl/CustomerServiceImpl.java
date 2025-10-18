@@ -11,6 +11,8 @@ import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.mapper.CustomerMapper;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
 import com.example.nikonbe.modules.customer.service.interF.CustomerService;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,9 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +42,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     Customer savedCustomer = customerRepository.save(customer);
     log.info("Created customer with ID: {}", savedCustomer.getId());
-    
+
     return customerMapper.toDto(savedCustomer);
   }
 
@@ -55,7 +54,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     customerMapper.updateEntityFromDto(dto, customer);
     Customer savedCustomer = customerRepository.save(customer);
-    
+
     log.info("Updated customer with ID: {}", id);
     return customerMapper.toDto(savedCustomer);
   }
@@ -76,19 +75,21 @@ public class CustomerServiceImpl implements CustomerService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<CustomerResponseDTO> getCustomersWithAdvancedFilters(CustomerFilterDTO filterDTO, Pageable pageable) {
-    Page<Customer> customerPage = customerRepository.findByAdvancedFilters(
-        filterDTO.getKeyword(),
-        filterDTO.getStatus(),
-        filterDTO.getEmail(),
-        filterDTO.getPhoneNumber(),
-        filterDTO.getFullName(),
-        filterDTO.getGender(),
-        filterDTO.getProvider(),
-        filterDTO.getIsGuest(),
-        filterDTO.getCreatedFromDate(),
-        filterDTO.getCreatedToDate(),
-        pageable);
+  public Page<CustomerResponseDTO> getCustomersWithAdvancedFilters(
+      CustomerFilterDTO filterDTO, Pageable pageable) {
+    Page<Customer> customerPage =
+        customerRepository.findByAdvancedFilters(
+            filterDTO.getKeyword(),
+            filterDTO.getStatus(),
+            filterDTO.getEmail(),
+            filterDTO.getPhoneNumber(),
+            filterDTO.getFullName(),
+            filterDTO.getGender(),
+            filterDTO.getProvider(),
+            filterDTO.getIsGuest(),
+            filterDTO.getCreatedFromDate(),
+            filterDTO.getCreatedToDate(),
+            pageable);
     return customerPage.map(customerMapper::toDto);
   }
 
@@ -98,7 +99,7 @@ public class CustomerServiceImpl implements CustomerService {
     Customer customer = findCustomerById(id);
     customer.setStatus(Status.DELETED);
     customerRepository.save(customer);
-    
+
     log.info("Soft deleted customer with ID: {}", id);
   }
 
@@ -126,7 +127,7 @@ public class CustomerServiceImpl implements CustomerService {
     Customer customer = findCustomerById(id);
     customer.setStatus(status);
     Customer savedCustomer = customerRepository.save(customer);
-    
+
     log.info("Changed customer status - ID: {}, Status: {}", id, status);
     return customerMapper.toDto(savedCustomer);
   }
@@ -135,16 +136,16 @@ public class CustomerServiceImpl implements CustomerService {
   @Transactional
   public CustomerResponseDTO blockCustomer(Integer id, String reason) {
     Customer customer = findCustomerById(id);
-    
+
     if (customer.getStatus() == Status.DELETED) {
       Map<String, String> errors = new HashMap<>();
       errors.put("status", "Cannot block a deleted customer");
       throw new ValidationException("Invalid operation", errors);
     }
-    
+
     customer.setStatus(Status.INACTIVE);
     Customer savedCustomer = customerRepository.save(customer);
-    
+
     log.info("Blocked customer - ID: {}, Reason: {}", id, reason);
     return customerMapper.toDto(savedCustomer);
   }
@@ -155,13 +156,14 @@ public class CustomerServiceImpl implements CustomerService {
     Customer customer = findCustomerById(id);
     customer.setStatus(Status.ACTIVE);
     Customer savedCustomer = customerRepository.save(customer);
-    
+
     log.info("Unblocked customer - ID: {}", id);
     return customerMapper.toDto(savedCustomer);
   }
 
   private Customer findCustomerById(Integer id) {
-    return customerRepository.findById(id)
+    return customerRepository
+        .findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", id));
   }
 

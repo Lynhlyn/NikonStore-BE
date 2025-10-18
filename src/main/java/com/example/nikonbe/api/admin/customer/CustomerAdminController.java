@@ -27,24 +27,31 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/admin/v1/customers")
 @RequiredArgsConstructor
-@Tag(name = "Admin - Customer Management", description = "Customer management APIs for administrators")
+@Tag(
+    name = "Admin - Customer Management",
+    description = "Customer management APIs for administrators")
 public class CustomerAdminController {
 
   private final CustomerService customerService;
 
   @PostMapping
-  @Operation(summary = "Create a new customer", description = "Create a new customer account (Admin)")
+  @Operation(
+      summary = "Create a new customer",
+      description = "Create a new customer account (Admin)")
   @ApiResponse(
       responseCode = "201",
       description = "Customer created successfully",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-  public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> create(@Valid @RequestBody CustomerCreateDTO dto) {
+  public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> create(
+      @Valid @RequestBody CustomerCreateDTO dto) {
     CustomerResponseDTO result = customerService.create(dto);
     return ResponseUtils.success(result, "Customer created successfully", HttpStatus.CREATED);
   }
 
   @PutMapping("/{id}")
-  @Operation(summary = "Update customer information", description = "Update customer profile information (Admin)")
+  @Operation(
+      summary = "Update customer information",
+      description = "Update customer profile information (Admin)")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
@@ -60,7 +67,9 @@ public class CustomerAdminController {
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Get customer by ID", description = "Retrieve customer information by ID (Admin)")
+  @Operation(
+      summary = "Get customer by ID",
+      description = "Retrieve customer information by ID (Admin)")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
@@ -83,14 +92,17 @@ public class CustomerAdminController {
       description = "Customers retrieved successfully",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
   public ResponseEntity<ApiResponseDto<Page<CustomerResponseDTO>>> getAllWithFilters(
-      @Parameter(description = "Advanced filter criteria") @ModelAttribute CustomerFilterDTO filterDTO,
+      @Parameter(description = "Advanced filter criteria") @ModelAttribute
+          CustomerFilterDTO filterDTO,
       @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc") String direction) {
+      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc")
+          String direction) {
 
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
-    Page<CustomerResponseDTO> result = customerService.getCustomersWithAdvancedFilters(filterDTO, pageable);
+    Page<CustomerResponseDTO> result =
+        customerService.getCustomersWithAdvancedFilters(filterDTO, pageable);
     return ResponseUtils.successWithPage(result, "Customers retrieved successfully");
   }
 
@@ -108,7 +120,8 @@ public class CustomerAdminController {
       @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc") String direction) {
+      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc")
+          String direction) {
 
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
     Page<CustomerResponseDTO> result = customerService.getAll(keyword, status, pageable);
@@ -178,7 +191,9 @@ public class CustomerAdminController {
   }
 
   @GetMapping("/check-username")
-  @Operation(summary = "Check username availability", description = "Check if username is available")
+  @Operation(
+      summary = "Check username availability",
+      description = "Check if username is available")
   @ApiResponse(
       responseCode = "200",
       description = "Username availability checked",
@@ -202,7 +217,9 @@ public class CustomerAdminController {
   }
 
   @GetMapping("/check-phone")
-  @Operation(summary = "Check phone number availability", description = "Check if phone number is available")
+  @Operation(
+      summary = "Check phone number availability",
+      description = "Check if phone number is available")
   @ApiResponse(
       responseCode = "200",
       description = "Phone number availability checked",
@@ -210,6 +227,7 @@ public class CustomerAdminController {
   public ResponseEntity<ApiResponseDto<Boolean>> checkPhone(
       @Parameter(description = "Phone number to check") @RequestParam String phoneNumber) {
     boolean exists = customerService.existsByPhoneNumber(phoneNumber);
-    return ResponseUtils.success(!exists, exists ? "Phone number is taken" : "Phone number is available");
+    return ResponseUtils.success(
+        !exists, exists ? "Phone number is taken" : "Phone number is available");
   }
 }
