@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,13 +38,16 @@ public class CustomerController {
       responseCode = "201",
       description = "Customer created successfully",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-  public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> create(@Valid @RequestBody CustomerCreateDTO dto) {
+  public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> create(
+      @Valid @RequestBody CustomerCreateDTO dto) {
     CustomerResponseDTO result = customerService.create(dto);
     return ResponseUtils.success(result, "Customer created successfully", HttpStatus.CREATED);
   }
 
   @PutMapping("/{id}")
-  @Operation(summary = "Update customer information", description = "Update customer profile information")
+  @Operation(
+      summary = "Update customer information",
+      description = "Update customer profile information")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
@@ -81,13 +85,14 @@ public class CustomerController {
       responseCode = "200",
       description = "Customers retrieved successfully",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-  public ResponseEntity<ApiResponseDto<Page<CustomerResponseDTO>>> getAll(
+  public ResponseEntity<ApiResponseDto<List<CustomerResponseDTO>>> getAll(
       @Parameter(description = "Search keyword") @RequestParam(required = false) String keyword,
       @Parameter(description = "Filter by status") @RequestParam(required = false) Status status,
       @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc") String direction) {
+      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc")
+          String direction) {
 
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
     Page<CustomerResponseDTO> result = customerService.getAll(keyword, status, pageable);

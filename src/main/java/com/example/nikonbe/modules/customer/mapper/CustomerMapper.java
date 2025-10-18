@@ -4,10 +4,9 @@ import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
 import com.example.nikonbe.modules.customer.entity.Customer;
-import org.mapstruct.*;
-
 import java.time.LocalDate;
 import java.util.List;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface CustomerMapper {
@@ -16,8 +15,6 @@ public interface CustomerMapper {
   @Mapping(target = "password", ignore = true)
   @Mapping(target = "provider", ignore = true)
   @Mapping(target = "providerId", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "stringToLocalDate")
   Customer toEntity(CustomerCreateDTO dto);
 
@@ -25,8 +22,6 @@ public interface CustomerMapper {
   @Mapping(target = "password", ignore = true)
   @Mapping(target = "provider", ignore = true)
   @Mapping(target = "providerId", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "stringToLocalDate")
   void updateEntityFromDto(CustomerUpdateDTO dto, @MappingTarget Customer entity);
 

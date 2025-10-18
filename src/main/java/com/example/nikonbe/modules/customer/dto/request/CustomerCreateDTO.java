@@ -46,7 +46,10 @@ public class CustomerCreateDTO {
   @Schema(description = "Customer date of birth", example = "1990-01-01")
   private String dateOfBirth;
 
-  @Schema(description = "Customer gender", example = "Male", allowableValues = {"Male", "Female", "Other"})
+  @Schema(
+      description = "Customer gender",
+      example = "Male",
+      allowableValues = {"Male", "Female", "Other"})
   private String gender;
 
   @Schema(description = "Whether customer is guest", example = "false")

@@ -4,9 +4,8 @@ import com.example.nikonbe.common.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
 import java.time.LocalDate;
+import lombok.*;
 
 @Data
 @Builder
@@ -33,7 +32,10 @@ public class CustomerFilterDTO {
   @Schema(description = "Filter by full name (partial match)", example = "John")
   private String fullName;
 
-  @Schema(description = "Filter by gender", example = "Male", allowableValues = {"Male", "Female", "Other"})
+  @Schema(
+      description = "Filter by gender",
+      example = "Male",
+      allowableValues = {"Male", "Female", "Other"})
   private String gender;
 
   @Schema(description = "Filter by OAuth provider", example = "LOCAL")
