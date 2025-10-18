@@ -2,6 +2,7 @@ package com.example.nikonbe.modules.customer.entity;
 
 import com.example.nikonbe.common.base.BaseEntity;
 import com.example.nikonbe.common.enums.Status;
+import com.example.nikonbe.common.utils.StatusConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -72,7 +73,7 @@ public class Customer extends BaseEntity {
   private String providerId;
 
   @NotNull(message = "Status is required")
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = StatusConverter.class)
   @Column(name = "status", nullable = false)
   private Status status;
 }

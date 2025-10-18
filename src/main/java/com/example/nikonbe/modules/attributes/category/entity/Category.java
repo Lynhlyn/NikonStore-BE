@@ -2,6 +2,7 @@ package com.example.nikonbe.modules.attributes.category.entity;
 
 import com.example.nikonbe.common.base.BaseEntity;
 import com.example.nikonbe.common.enums.Status;
+import com.example.nikonbe.common.utils.StatusConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,7 +36,7 @@ public class Category extends BaseEntity {
   private String description;
 
   @NotNull(message = "Status is required")
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = StatusConverter.class)
   @Column(nullable = false)
   private Status status;
 }
