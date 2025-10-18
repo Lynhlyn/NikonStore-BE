@@ -38,7 +38,8 @@ public class VoucherAdminController {
       responseCode = "201",
       description = "Tạo thành công",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-  public ResponseEntity<ApiResponseDto<VoucherResponseDTO>> create(@Valid @RequestBody VoucherCreateDTO dto) {
+  public ResponseEntity<ApiResponseDto<VoucherResponseDTO>> create(
+      @Valid @RequestBody VoucherCreateDTO dto) {
     VoucherResponseDTO result = voucherService.create(dto);
     return ResponseUtils.success(result, "Tạo voucher thành công", HttpStatus.CREATED);
   }
@@ -59,7 +60,8 @@ public class VoucherAdminController {
   @DeleteMapping("/{id}")
   @Operation(summary = "Xóa voucher", description = "Đánh dấu voucher là DELETED (xóa mềm)")
   @ApiResponse(responseCode = "200", description = "Xóa thành công")
-  public ResponseEntity<ApiResponseDto<Void>> delete(@Parameter(description = "ID voucher") @PathVariable Long id) {
+  public ResponseEntity<ApiResponseDto<Void>> delete(
+      @Parameter(description = "ID voucher") @PathVariable Long id) {
     voucherService.delete(id);
     return ResponseUtils.success(null, "Xóa voucher thành công");
   }
