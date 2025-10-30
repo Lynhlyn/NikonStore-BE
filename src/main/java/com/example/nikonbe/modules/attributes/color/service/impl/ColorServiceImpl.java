@@ -27,7 +27,7 @@ public class ColorServiceImpl implements ColorService {
   @Override
   public ColorResponseDTO create(ColorCreateDTO dto) {
     if (colorRepository.existsByName(dto.getName())) {
-      throw new ResourceAlreadyExistsException("Color", "name", dto.getName());
+      throw new ResourceAlreadyExistsException("Color với tên '" + dto.getName() + "' đã tồn tại");
     }
 
     Color color = colorMapper.toEntity(dto);
@@ -44,7 +44,7 @@ public class ColorServiceImpl implements ColorService {
             .orElseThrow(() -> new ResourceNotFoundException("Color", "id", id));
 
     if (colorRepository.existsByNameAndIdNot(dto.getName(), id)) {
-      throw new ResourceAlreadyExistsException("Color", "name", dto.getName());
+      throw new ResourceAlreadyExistsException("Color với tên '" + dto.getName() + "' đã tồn tại");
     }
 
     colorMapper.updateEntityFromDto(dto, color);
