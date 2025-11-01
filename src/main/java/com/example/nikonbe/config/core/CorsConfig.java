@@ -25,6 +25,8 @@ public class CorsConfig {
   };
 
   private static final String[] DYNAMIC_PATTERNS = {
+    "https://*.ngrok.io",
+    "https://*.ngrok-free.app",
     "https://*.vercel.app",
     "https://*.netlify.app",
     "http://localhost:*",
