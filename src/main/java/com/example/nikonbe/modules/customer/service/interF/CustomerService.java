@@ -8,6 +8,7 @@ import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 
 public interface CustomerService {
 
@@ -20,6 +21,8 @@ public interface CustomerService {
   CustomerResponseDTO adminUpdate(Integer id, CustomerUpdateDTO dto);
 
   CustomerResponseDTO getById(Integer id);
+
+  CustomerResponseDTO getCurrentUser(Authentication authentication);
 
   Page<CustomerResponseDTO> getAll(String keyword, Status status, Pageable pageable);
 

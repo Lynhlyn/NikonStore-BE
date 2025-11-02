@@ -31,6 +31,7 @@ public class SecurityConfig {
 
   private final CorsConfigurationSource corsConfigurationSource;
   private final StaffJWTAuthenticationFilter staffJWTAuthenticationFilter;
+  private final CustomerJWTAuthenticationFilter customerJWTAuthenticationFilter;
   private final StaffDetailService staffDetailService;
   private final CustomerDetailService customerDetailService;
 
@@ -60,6 +61,7 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(customerAuthenticationProvider())
         .authenticationProvider(staffAuthenticationProvider())
+        .addFilterBefore(customerJWTAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(staffJWTAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

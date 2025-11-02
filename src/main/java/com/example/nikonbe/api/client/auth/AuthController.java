@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping("/api/v1/client/auth")
+@RequestMapping("${api.version}/auth")
 @RequiredArgsConstructor
 @Tag(name = "Client - Authentication Account", description = "Các API bảo mật (customer)")
 public class AuthController {

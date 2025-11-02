@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -138,6 +139,35 @@ public class CustomerServiceImpl implements CustomerService {
   @Transactional(readOnly = true)
   public CustomerResponseDTO getById(Integer id) {
     Customer customer = findCustomerById(id);
+    return customerMapper.toDto(customer);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public CustomerResponseDTO getCurrentUser(Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()) {
+      throw new ValidationException("Người dùng chưa đăng nhập hoặc token không hợp lệ");
+    }
+    if (authentication.getName() == null) {
+      throw new ValidationException("Thông tin xác thực không hợp lệ");
+    }
+
+    String username = authentication.getName();
+    log.debug("Getting current customer info for username: {}", username);
+
+    Customer customer =
+        customerRepository
+            .findByEmailOrUsername(username)
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Không tìm thấy customer với thông tin: " + username));
+
+    if (customer.getStatus() != Status.ACTIVE) {
+      throw new ValidationException("Tài khoản không hoạt động");
+    }
+
+    log.info("Successfully retrieved current customer info for customer ID: {}", customer.getId());
     return customerMapper.toDto(customer);
   }
 
