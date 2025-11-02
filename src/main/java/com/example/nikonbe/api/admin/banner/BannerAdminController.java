@@ -22,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/v1/banners")
+@RequestMapping("/banners")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Banner Management", description = "Các API quản lý banner cho admin")
 public class BannerAdminController {
