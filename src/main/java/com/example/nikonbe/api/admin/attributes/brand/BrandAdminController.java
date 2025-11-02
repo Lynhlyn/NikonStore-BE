@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/v1/brands")
+@RequestMapping("${api.admin.version}/brands")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Brand Management", description = "Các API quản lý thương hiệu cho admin")
 public class BrandAdminController {
