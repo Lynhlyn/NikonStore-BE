@@ -1,7 +1,11 @@
 package com.example.nikonbe.common.enums;
 
 public enum UserRole {
+  USER,
   ADMIN,
-  STAFF,
-  CUSTOMER
+  main,
+  staff,
+  customer,
+  system,
+  sales
 }
