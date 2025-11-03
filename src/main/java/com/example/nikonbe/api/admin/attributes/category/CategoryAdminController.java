@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/v1/categories")
+@RequestMapping("${api.admin.version}/categories")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Category Management", description = "Các API quản lý danh mục cho admin")
 public class CategoryAdminController {
