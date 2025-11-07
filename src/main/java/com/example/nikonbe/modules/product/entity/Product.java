@@ -7,9 +7,11 @@ import com.example.nikonbe.modules.attributes.brand.entity.Brand;
 import com.example.nikonbe.modules.attributes.category.entity.Category;
 import com.example.nikonbe.modules.attributes.material.entity.Material;
 import com.example.nikonbe.modules.attributes.strape_type.entity.StrapType;
+import com.example.nikonbe.modules.product_image.entity.ProductImage;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.*;
 
 @Getter
@@ -60,4 +62,11 @@ public class Product extends BaseEntity {
   @Convert(converter = StatusConverter.class)
   @Column(nullable = false)
   private Status status;
+
+  @OneToMany(
+      mappedBy = "product",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private List<ProductImage> images;
 }

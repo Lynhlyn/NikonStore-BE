@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/product-details")
+@RequestMapping("${api.admin.version}")
 @Tag(name = "Admin - Product Detail Management")
 public class ProductDetailAdminController {
 

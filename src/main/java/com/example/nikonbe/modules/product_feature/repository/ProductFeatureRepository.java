@@ -18,6 +18,12 @@ public interface ProductFeatureRepository extends JpaRepository<ProductFeature, 
   @Query("SELECT pf FROM ProductFeature pf WHERE pf.product.id = :productId")
   List<ProductFeature> findByProductId(@Param("productId") Integer productId);
 
+  @Query(
+      "SELECT DISTINCT pf FROM ProductFeature pf "
+          + "LEFT JOIN FETCH pf.feature "
+          + "WHERE pf.product.id IN :productIds")
+  List<ProductFeature> findByProductIdIn(@Param("productIds") List<Integer> productIds);
+
   @Query("SELECT pf FROM ProductFeature pf WHERE pf.feature.id = :featureId")
   List<ProductFeature> findByFeatureId(@Param("featureId") Integer featureId);
 

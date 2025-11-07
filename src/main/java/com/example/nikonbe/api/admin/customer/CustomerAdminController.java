@@ -26,7 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/customers")
+@RequestMapping("${api.admin.version}/customers")
 @RequiredArgsConstructor
 @Tag(
     name = "Admin - Customer Management",

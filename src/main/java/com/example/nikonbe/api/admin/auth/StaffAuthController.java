@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/auth")
+@RequestMapping("${api.admin.version}/auth")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Staff Authentication", description = "Các API xác thực cho staff admin")
 public class StaffAuthController {

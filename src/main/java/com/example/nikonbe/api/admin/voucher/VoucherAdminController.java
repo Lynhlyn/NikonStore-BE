@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/vouchers")
+@RequestMapping("${api.admin.version}n/vouchers")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Voucher Management", description = "Các API quản lý voucher dành cho admin")
 public class VoucherAdminController {

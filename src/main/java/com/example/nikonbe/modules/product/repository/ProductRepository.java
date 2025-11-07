@@ -2,6 +2,7 @@ package com.example.nikonbe.modules.product.repository;
 
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.modules.product.entity.Product;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,4 +27,24 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       @Param("categoryId") Integer categoryId,
       @Param("brandId") Integer brandId,
       Pageable pageable);
+
+  @Query(
+      "SELECT DISTINCT p FROM Product p "
+          + "LEFT JOIN FETCH p.strapType "
+          + "LEFT JOIN FETCH p.brand "
+          + "LEFT JOIN FETCH p.category "
+          + "LEFT JOIN FETCH p.category.parent "
+          + "LEFT JOIN FETCH p.material "
+          + "WHERE p.id IN :ids")
+  List<Product> findAllWithRelationshipsByIds(@Param("ids") List<Integer> ids);
+
+  @Query(
+      "SELECT DISTINCT p FROM Product p "
+          + "LEFT JOIN FETCH p.strapType "
+          + "LEFT JOIN FETCH p.brand "
+          + "LEFT JOIN FETCH p.category "
+          + "LEFT JOIN FETCH p.category.parent "
+          + "LEFT JOIN FETCH p.material "
+          + "WHERE p.id = :id")
+  Optional<Product> findByIdWithRelationships(@Param("id") Integer id);
 }

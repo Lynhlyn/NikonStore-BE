@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/staffs")
+@RequestMapping("${api.admin.version}/staffs")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Staff Management", description = "Các API quản lý staff cho admin")
 public class StaffAdminController {
