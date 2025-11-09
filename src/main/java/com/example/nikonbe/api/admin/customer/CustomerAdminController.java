@@ -4,7 +4,8 @@ import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.response.ApiResponseDto;
 import com.example.nikonbe.common.utils.PaginationUtils;
 import com.example.nikonbe.common.utils.ResponseUtils;
-import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
+import com.example.nikonbe.modules.customer.dto.request.BlockCustomerDTO;
+import com.example.nikonbe.modules.customer.dto.request.CreateCustomerDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerFilterDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
@@ -44,9 +45,9 @@ public class CustomerAdminController {
       description = "Customer created successfully",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
   public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> create(
-      @Valid @RequestBody CustomerCreateDTO dto) {
-    CustomerResponseDTO result = customerService.create(dto);
-    return ResponseUtils.success(result, "Customer created successfully", HttpStatus.CREATED);
+      @Valid @RequestBody CreateCustomerDTO dto) {
+    CustomerResponseDTO result = customerService.adminCreated(dto);
+    return ResponseUtils.success(result, "Tạo tài khoản thành công.", HttpStatus.CREATED);
   }
 
   @PutMapping("/{id}")
@@ -63,8 +64,8 @@ public class CustomerAdminController {
   public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> update(
       @Parameter(description = "Customer ID") @PathVariable Integer id,
       @Valid @RequestBody CustomerUpdateDTO dto) {
-    CustomerResponseDTO result = customerService.update(id, dto);
-    return ResponseUtils.success(result, "Customer updated successfully");
+    CustomerResponseDTO result = customerService.adminUpdate(id, dto);
+    return ResponseUtils.success(result, "Cập nhật tài khoản thành công.");
   }
 
   @GetMapping("/{id}")
@@ -84,27 +85,47 @@ public class CustomerAdminController {
     return ResponseUtils.success(result, "Customer retrieved successfully");
   }
 
-  @GetMapping
+  @PostMapping("/filter")
   @Operation(
-      summary = "Get customers list with advanced filters",
-      description = "Retrieve paginated list of customers with advanced filtering options")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Customers retrieved successfully",
-      content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-  public ResponseEntity<ApiResponseDto<List<CustomerResponseDTO>>> getAllWithFilters(
-      @Parameter(description = "Advanced filter criteria") @ModelAttribute
+      summary = "Lọc danh sách khách hàng nâng cao",
+      description =
+          "Hỗ trợ lọc theo nhiều tiêu chí: keyword, status, email, phone, fullName, gender, provider, isGuest, ngày tạo, ngày cập nhật")
+  @ApiResponse(responseCode = "200", description = "Lấy thành công")
+  public ResponseEntity<ApiResponseDto<List<CustomerResponseDTO>>> getCustomersWithAdvancedFilters(
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "Các tiêu chí lọc khách hàng",
+              required = true)
+          @RequestBody
           CustomerFilterDTO filterDTO,
-      @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-      @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
-      @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc")
+      @Parameter(description = "Số trang") @RequestParam(defaultValue = "0") int page,
+      @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size,
+      @Parameter(description = "Sắp xếp theo") @RequestParam(defaultValue = "id") String sort,
+      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "asc")
           String direction) {
 
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
     Page<CustomerResponseDTO> result =
         customerService.getCustomersWithAdvancedFilters(filterDTO, pageable);
-    return ResponseUtils.successWithPage(result, "Customers retrieved successfully");
+    return ResponseUtils.successWithPage(result, "Lọc danh sách khách hàng thành công");
+  }
+
+  @GetMapping
+  @Operation(
+      summary = "Lấy danh sách tài khoản khách hàng",
+      description = "Hỗ trợ tìm kiếm và lọc theo trạng thái")
+  @ApiResponse(responseCode = "200", description = "Lấy thành công")
+  public ResponseEntity<ApiResponseDto<List<CustomerResponseDTO>>> getAll(
+      @Parameter(description = "Từ khóa tìm kiếm") @RequestParam(required = false) String keyword,
+      @Parameter(description = "Lọc theo trạng thái") @RequestParam(required = false) Status status,
+      @Parameter(description = "Số trang") @RequestParam(defaultValue = "0") int page,
+      @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size,
+      @Parameter(description = "Sắp xếp theo") @RequestParam(defaultValue = "id") String sort,
+      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "asc")
+          String direction) {
+
+    Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
+    Page<CustomerResponseDTO> result = customerService.getAll(keyword, status, pageable);
+    return ResponseUtils.successWithPage(result, "Lấy danh sách tài khoản khách hàng thành công");
   }
 
   @GetMapping("/simple")
@@ -130,65 +151,83 @@ public class CustomerAdminController {
   }
 
   @DeleteMapping("/{id}")
-  @Operation(summary = "Delete customer", description = "Soft delete a customer account (Admin)")
+  @Operation(summary = "Xoá tài khoản", description = "Đánh dấu tài khoản là đã xoá")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
-        description = "Customer deleted successfully",
+        description = "Xoá thành công",
         content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
-    @ApiResponse(responseCode = "404", description = "Customer not found")
+    @ApiResponse(responseCode = "404", description = "Không tìm thấy tài khoản")
   })
   public ResponseEntity<ApiResponseDto<Void>> delete(
-      @Parameter(description = "Customer ID") @PathVariable Integer id) {
+      @Parameter(description = "ID tài khoản") @PathVariable Integer id,
+      @RequestBody String reason) {
     customerService.delete(id);
-    return ResponseUtils.success(null, "Customer deleted successfully");
+    return ResponseUtils.success(null, "Xoá tài khoản thành công.");
   }
 
-  @PutMapping("/{id}/status")
-  @Operation(summary = "Toggle customer status", description = "Change customer status (Admin)")
+  @PatchMapping("/{id}/toggle-status")
+  @Operation(summary = "Thay đổi trạng thái tài khoản khách hàng")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
-        description = "Customer status updated successfully",
+        description = "Cập nhật trạng thái thành công.",
         content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
-    @ApiResponse(responseCode = "404", description = "Customer not found")
+    @ApiResponse(responseCode = "404", description = "Không tìm thấy tài khoản.")
   })
   public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> toggleStatus(
-      @Parameter(description = "Customer ID") @PathVariable Integer id,
-      @Parameter(description = "New status") @RequestParam Status status) {
-    CustomerResponseDTO result = customerService.toggleStatus(id, status);
-    return ResponseUtils.success(result, "Customer status updated successfully");
+      @Parameter(description = "ID tài khoản") @PathVariable Integer id,
+      @RequestBody ToggleStatusRequest statusRequest) {
+    CustomerResponseDTO result = customerService.toggleStatus(id, statusRequest.getStatus());
+    return ResponseUtils.success(result, "Cập nhật trạng thái tài khoản thành công.");
   }
 
-  @PutMapping("/{id}/block")
-  @Operation(summary = "Block customer", description = "Block a customer account (Admin)")
+  @PostMapping("/{id}/block")
+  @Operation(summary = "Khoá tài khoản khách hàng")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
-        description = "Customer blocked successfully",
+        description = "Khoá tài khoản thành công.",
         content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
-    @ApiResponse(responseCode = "404", description = "Customer not found")
+    @ApiResponse(responseCode = "404", description = "Không tìm thấy tài khoản."),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Tài khoản đã bị khoá hoặc dữ liệu không hợp lệ.")
   })
   public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> blockCustomer(
-      @Parameter(description = "Customer ID") @PathVariable Integer id,
-      @Parameter(description = "Block reason") @RequestParam String reason) {
-    CustomerResponseDTO result = customerService.blockCustomer(id, reason);
-    return ResponseUtils.success(result, "Customer blocked successfully");
+      @Parameter(description = "ID tài khoản") @PathVariable Integer id,
+      @Valid @RequestBody BlockCustomerDTO blockRequest) {
+    CustomerResponseDTO result = customerService.blockCustomer(id, blockRequest.getReason());
+    return ResponseUtils.success(result, "Khoá tài khoản thành công.");
   }
 
-  @PutMapping("/{id}/unblock")
-  @Operation(summary = "Unblock customer", description = "Unblock a customer account (Admin)")
+  @PostMapping("/{id}/unblock")
+  @Operation(summary = "Mở khoá tài khoản khách hàng")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
-        description = "Customer unblocked successfully",
+        description = "Mở khoá tài khoản thành công.",
         content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
-    @ApiResponse(responseCode = "404", description = "Customer not found")
+    @ApiResponse(responseCode = "404", description = "Không tìm thấy tài khoản."),
+    @ApiResponse(responseCode = "400", description = "Tài khoản hiện không ở trạng thái bị khoá.")
   })
   public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> unblockCustomer(
-      @Parameter(description = "Customer ID") @PathVariable Integer id) {
+      @Parameter(description = "ID tài khoản") @PathVariable Integer id) {
     CustomerResponseDTO result = customerService.unblockCustomer(id);
-    return ResponseUtils.success(result, "Customer unblocked successfully");
+    return ResponseUtils.success(result, "Mở khoá tài khoản thành công.");
+  }
+
+  // Inner class for toggle status request
+  public static class ToggleStatusRequest {
+    private Status status;
+
+    public Status getStatus() {
+      return status;
+    }
+
+    public void setStatus(Status status) {
+      this.status = status;
+    }
   }
 
   @GetMapping("/check-username")

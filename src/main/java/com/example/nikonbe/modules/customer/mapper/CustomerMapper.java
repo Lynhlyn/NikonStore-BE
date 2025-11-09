@@ -1,5 +1,6 @@
 package com.example.nikonbe.modules.customer.mapper;
 
+import com.example.nikonbe.modules.customer.dto.request.CreateCustomerDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
@@ -17,6 +18,12 @@ public interface CustomerMapper {
   @Mapping(target = "providerId", ignore = true)
   @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "stringToLocalDate")
   Customer toEntity(CustomerCreateDTO dto);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "password", ignore = true)
+  @Mapping(target = "provider", ignore = true)
+  @Mapping(target = "providerId", ignore = true)
+  Customer toEntity(CreateCustomerDTO dto);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "password", ignore = true)

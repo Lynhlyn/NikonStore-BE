@@ -172,10 +172,11 @@ public class VoucherServiceImpl implements VoucherService {
     Status newStatus;
     if (voucher.getStatus() == Status.ACTIVE) {
       newStatus = Status.INACTIVE;
-    } else if (voucher.getStatus() == Status.INACTIVE || voucher.getStatus() == Status.PENDING) {
+    } else if (voucher.getStatus() == Status.INACTIVE
+        || voucher.getStatus() == Status.PENDING_START) {
       if (canVoucherBeActivated(voucher)) {
         if (voucher.getStartDate() != null && voucher.getStartDate().isAfter(LocalDateTime.now())) {
-          newStatus = Status.PENDING;
+          newStatus = Status.PENDING_START;
         } else {
           newStatus = Status.ACTIVE;
         }
@@ -339,7 +340,7 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     if (now.isBefore(startDate)) {
-      return Status.PENDING;
+      return Status.PENDING_START;
     } else if (now.isAfter(endDate)) {
       return Status.INACTIVE;
     } else {
@@ -370,11 +371,11 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     if (now.isBefore(startDate)) {
-      return Status.PENDING;
+      return Status.PENDING_START;
     } else if (now.isAfter(endDate)) {
       return Status.INACTIVE;
     } else {
-      if (Status.PENDING.equals(oldStatus)) {
+      if (Status.PENDING_START.equals(oldStatus)) {
         return Status.ACTIVE;
       }
       return oldStatus;
