@@ -1,6 +1,7 @@
 package com.example.nikonbe.modules.customer.service.interF;
 
 import com.example.nikonbe.common.enums.Status;
+import com.example.nikonbe.modules.customer.dto.request.CreateCustomerDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerFilterDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
@@ -12,7 +13,11 @@ public interface CustomerService {
 
   CustomerResponseDTO create(CustomerCreateDTO dto);
 
+  CustomerResponseDTO adminCreated(CreateCustomerDTO dto);
+
   CustomerResponseDTO update(Integer id, CustomerUpdateDTO dto);
+
+  CustomerResponseDTO adminUpdate(Integer id, CustomerUpdateDTO dto);
 
   CustomerResponseDTO getById(Integer id);
 
