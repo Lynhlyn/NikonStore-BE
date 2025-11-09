@@ -6,4 +6,8 @@ public class CloudinaryException extends BaseException {
   public CloudinaryException(String message) {
     super(message, HttpStatus.INTERNAL_SERVER_ERROR.value());
   }
+
+  public CloudinaryException(String message, Throwable cause) {
+    super(message, HttpStatus.INTERNAL_SERVER_ERROR.value(), cause);
+  }
 }

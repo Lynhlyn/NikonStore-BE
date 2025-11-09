@@ -19,13 +19,35 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
   Optional<Product> findByName(String name);
 
   @Query(
-      "SELECT p FROM Product p WHERE (:status IS NULL OR p.status = :status) AND "
-          + "(:categoryId IS NULL OR p.category.id = :categoryId) AND "
-          + "(:brandId IS NULL OR p.brand.id = :brandId)")
+      value =
+          "SELECT DISTINCT p FROM Product p "
+              + "LEFT JOIN FETCH p.brand "
+              + "LEFT JOIN FETCH p.category "
+              + "LEFT JOIN FETCH p.material "
+              + "LEFT JOIN FETCH p.strapType "
+              + "WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+              + "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+              + "(:status IS NULL OR p.status = :status) AND "
+              + "(:categoryId IS NULL OR p.category.id = :categoryId) AND "
+              + "(:brandId IS NULL OR p.brand.id = :brandId) AND "
+              + "(:materialId IS NULL OR p.material.id = :materialId) AND "
+              + "(:strapTypeId IS NULL OR p.strapType.id = :strapTypeId)",
+      countQuery =
+          "SELECT COUNT(DISTINCT p) FROM Product p "
+              + "WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+              + "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+              + "(:status IS NULL OR p.status = :status) AND "
+              + "(:categoryId IS NULL OR p.category.id = :categoryId) AND "
+              + "(:brandId IS NULL OR p.brand.id = :brandId) AND "
+              + "(:materialId IS NULL OR p.material.id = :materialId) AND "
+              + "(:strapTypeId IS NULL OR p.strapType.id = :strapTypeId)")
   Page<Product> findAllWithFilters(
+      @Param("keyword") String keyword,
       @Param("status") Status status,
       @Param("categoryId") Integer categoryId,
       @Param("brandId") Integer brandId,
+      @Param("materialId") Integer materialId,
+      @Param("strapTypeId") Integer strapTypeId,
       Pageable pageable);
 
   @Query(

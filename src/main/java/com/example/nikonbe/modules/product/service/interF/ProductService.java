@@ -16,7 +16,13 @@ public interface ProductService {
   ProductResponseDTO getById(Integer id);
 
   Page<ProductResponseDTO> getAll(
-      Status status, Integer categoryId, Integer brandId, Pageable pageable);
+      String keyword,
+      Status status,
+      Integer categoryId,
+      Integer brandId,
+      Integer materialId,
+      Integer strapTypeId,
+      Pageable pageable);
 
   void delete(Integer id);
 }

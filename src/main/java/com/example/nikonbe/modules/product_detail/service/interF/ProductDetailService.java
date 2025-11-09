@@ -16,7 +16,12 @@ public interface ProductDetailService {
   ProductDetailResponseDTO getById(Integer id);
 
   Page<ProductDetailResponseDTO> getAll(
-      Status status, Integer productId, Integer colorId, Integer capacityId, Pageable pageable);
+      String sku,
+      Status status,
+      Integer productId,
+      Integer colorId,
+      Integer capacityId,
+      Pageable pageable);
 
   void delete(Integer id);
 }

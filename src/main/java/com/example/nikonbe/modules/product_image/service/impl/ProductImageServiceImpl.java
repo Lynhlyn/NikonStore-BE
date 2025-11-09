@@ -1,6 +1,7 @@
 package com.example.nikonbe.modules.product_image.service.impl;
 
 import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
+import com.example.nikonbe.common.helper.cloudinary.service.ImageUploadService;
 import com.example.nikonbe.modules.product.repository.ProductRepository;
 import com.example.nikonbe.modules.product_image.dto.request.ProductImageCreateDTO;
 import com.example.nikonbe.modules.product_image.dto.request.ProductImageUpdateDTO;
@@ -24,6 +25,7 @@ public class ProductImageServiceImpl implements ProductImageService {
   private final ProductImageRepository repository;
   private final ProductRepository productRepository;
   private final ProductImageMapper mapper;
+  private final ImageUploadService imageUploadService;
 
   @Override
   public ProductImageResponseDTO create(ProductImageCreateDTO dto) {
@@ -78,10 +80,24 @@ public class ProductImageServiceImpl implements ProductImageService {
 
   @Override
   public void delete(Integer id) {
-    if (!repository.existsById(id)) {
-      throw new ResourceNotFoundException("ProductImage", "id", id);
+    ProductImage entity =
+        repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("ProductImage", "id", id));
+
+    // Xóa ảnh trên Cloudinary trước khi xóa record
+    try {
+      if (entity.getImageUrl() != null && !entity.getImageUrl().isEmpty()) {
+        imageUploadService.deleteImage(entity.getImageUrl());
+        log.info("Deleted image from Cloudinary: {}", entity.getImageUrl());
+      }
+    } catch (Exception e) {
+      log.warn("Failed to delete image from Cloudinary: {}", e.getMessage());
+      // Tiếp tục xóa record trong DB dù có lỗi khi xóa trên Cloudinary
     }
+
     repository.deleteById(id);
+    log.info("Deleted ProductImage with id: {}", id);
   }
 
   @Override
@@ -89,6 +105,24 @@ public class ProductImageServiceImpl implements ProductImageService {
     if (!productRepository.existsById(productId)) {
       throw new ResourceNotFoundException("Product", "id", productId);
     }
+
+    // Lấy danh sách ảnh trước khi xóa
+    List<ProductImage> images = repository.findByProductIdOrderBySortOrderAsc(productId);
+
+    // Xóa tất cả ảnh trên Cloudinary
+    for (ProductImage image : images) {
+      try {
+        if (image.getImageUrl() != null && !image.getImageUrl().isEmpty()) {
+          imageUploadService.deleteImage(image.getImageUrl());
+          log.info("Deleted image from Cloudinary: {}", image.getImageUrl());
+        }
+      } catch (Exception e) {
+        log.warn("Failed to delete image from Cloudinary: {}", e.getMessage());
+        // Tiếp tục xóa các ảnh khác dù có lỗi
+      }
+    }
+
     repository.deleteByProductId(productId);
+    log.info("Deleted all ProductImages for product id: {}", productId);
   }
 }

@@ -1,7 +1,9 @@
 package com.example.nikonbe.modules.product_detail.mapper;
 
 import com.example.nikonbe.modules.attributes.capacity.entity.Capacity;
+import com.example.nikonbe.modules.attributes.capacity.mapper.CapacityMapper;
 import com.example.nikonbe.modules.attributes.color.entity.Color;
+import com.example.nikonbe.modules.attributes.color.mapper.ColorMapper;
 import com.example.nikonbe.modules.product.entity.Product;
 import com.example.nikonbe.modules.product_detail.dto.request.ProductDetailCreateDTO;
 import com.example.nikonbe.modules.product_detail.dto.request.ProductDetailUpdateDTO;
@@ -9,7 +11,9 @@ import com.example.nikonbe.modules.product_detail.dto.response.ProductDetailResp
 import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {ColorMapper.class, CapacityMapper.class})
 public interface ProductDetailMapper {
 
   @Mapping(target = "id", ignore = true)
@@ -30,8 +34,10 @@ public interface ProductDetailMapper {
   @Mapping(target = "productName", source = "product.name")
   @Mapping(target = "colorId", source = "color.id")
   @Mapping(target = "colorName", source = "color.name")
+  @Mapping(target = "color", source = "color")
   @Mapping(target = "capacityId", source = "capacity.id")
   @Mapping(target = "capacityName", source = "capacity.name")
+  @Mapping(target = "capacity", source = "capacity")
   ProductDetailResponseDTO toDto(ProductDetail entity);
 
   default Product fromProductId(Integer id) {

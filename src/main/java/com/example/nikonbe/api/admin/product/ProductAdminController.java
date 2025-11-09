@@ -54,15 +54,19 @@ public class ProductAdminController {
   @GetMapping
   @Operation(summary = "Danh sách sản phẩm")
   public ResponseEntity<ApiResponseDto<java.util.List<ProductResponseDTO>>> getAll(
+      @RequestParam(required = false) String keyword,
       @RequestParam(required = false) Status status,
       @RequestParam(required = false) Integer categoryId,
       @RequestParam(required = false) Integer brandId,
+      @RequestParam(required = false) Integer materialId,
+      @RequestParam(required = false) Integer strapTypeId,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(defaultValue = "id") String sort,
       @RequestParam(defaultValue = "desc") String direction) {
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
-    Page<ProductResponseDTO> result = service.getAll(status, categoryId, brandId, pageable);
+    Page<ProductResponseDTO> result =
+        service.getAll(keyword, status, categoryId, brandId, materialId, strapTypeId, pageable);
     return ResponseUtils.successWithPage(result, "Lấy danh sách sản phẩm thành công");
   }
 

@@ -12,4 +12,10 @@ public abstract class BaseException extends RuntimeException {
     this.message = message;
     this.status = status;
   }
+
+  protected BaseException(String message, int status, Throwable cause) {
+    super(message, cause);
+    this.message = message;
+    this.status = status;
+  }
 }

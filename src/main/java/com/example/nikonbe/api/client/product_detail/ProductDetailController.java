@@ -34,6 +34,7 @@ public class ProductDetailController {
   @GetMapping
   @Operation(summary = "Danh sách biến thể")
   public ResponseEntity<ApiResponseDto<java.util.List<ProductDetailResponseDTO>>> getAll(
+      @RequestParam(required = false) String sku,
       @RequestParam(required = false) Status status,
       @RequestParam(required = false) Integer productId,
       @RequestParam(required = false) Integer colorId,
@@ -44,7 +45,7 @@ public class ProductDetailController {
       @RequestParam(defaultValue = "desc") String direction) {
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);
     Page<ProductDetailResponseDTO> result =
-        service.getAll(status, productId, colorId, capacityId, pageable);
+        service.getAll(sku, status, productId, colorId, capacityId, pageable);
     return ResponseUtils.successWithPage(result, "Lấy danh sách biến thể thành công");
   }
 }

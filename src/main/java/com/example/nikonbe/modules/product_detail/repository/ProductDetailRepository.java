@@ -15,12 +15,35 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, In
   boolean existsBySkuAndIdNot(String sku, Integer id);
 
   @Query(
-      "SELECT pd FROM ProductDetail pd WHERE "
-          + "(:status IS NULL OR pd.status = :status) AND "
-          + "(:productId IS NULL OR pd.product.id = :productId) AND "
-          + "(:colorId IS NULL OR pd.color.id = :colorId) AND "
-          + "(:capacityId IS NULL OR pd.capacity.id = :capacityId)")
+      "SELECT DISTINCT pd FROM ProductDetail pd "
+          + "LEFT JOIN FETCH pd.color "
+          + "LEFT JOIN FETCH pd.capacity "
+          + "LEFT JOIN FETCH pd.product "
+          + "WHERE pd.id = :id")
+  java.util.Optional<ProductDetail> findByIdWithDetails(@Param("id") Integer id);
+
+  @Query(
+      value =
+          "SELECT DISTINCT pd FROM ProductDetail pd "
+              + "LEFT JOIN FETCH pd.color "
+              + "LEFT JOIN FETCH pd.capacity "
+              + "LEFT JOIN FETCH pd.product "
+              + "WHERE "
+              + "(:sku IS NULL OR LOWER(pd.sku) LIKE LOWER(CONCAT('%', :sku, '%'))) AND "
+              + "(:status IS NULL OR pd.status = :status) AND "
+              + "(:productId IS NULL OR pd.product.id = :productId) AND "
+              + "(:colorId IS NULL OR pd.color.id = :colorId) AND "
+              + "(:capacityId IS NULL OR pd.capacity.id = :capacityId)",
+      countQuery =
+          "SELECT COUNT(DISTINCT pd) FROM ProductDetail pd "
+              + "WHERE "
+              + "(:sku IS NULL OR LOWER(pd.sku) LIKE LOWER(CONCAT('%', :sku, '%'))) AND "
+              + "(:status IS NULL OR pd.status = :status) AND "
+              + "(:productId IS NULL OR pd.product.id = :productId) AND "
+              + "(:colorId IS NULL OR pd.color.id = :colorId) AND "
+              + "(:capacityId IS NULL OR pd.capacity.id = :capacityId)")
   Page<ProductDetail> findAllWithFilters(
+      @Param("sku") String sku,
       @Param("status") Status status,
       @Param("productId") Integer productId,
       @Param("colorId") Integer colorId,

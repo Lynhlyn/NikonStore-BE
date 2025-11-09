@@ -103,8 +103,16 @@ public class ProductServiceImpl implements ProductService {
   @Override
   @Transactional(readOnly = true)
   public Page<ProductResponseDTO> getAll(
-      Status status, Integer categoryId, Integer brandId, Pageable pageable) {
-    Page<Product> page = repository.findAllWithFilters(status, categoryId, brandId, pageable);
+      String keyword,
+      Status status,
+      Integer categoryId,
+      Integer brandId,
+      Integer materialId,
+      Integer strapTypeId,
+      Pageable pageable) {
+    Page<Product> page =
+        repository.findAllWithFilters(
+            keyword, status, categoryId, brandId, materialId, strapTypeId, pageable);
     List<Integer> productIds =
         page.getContent().stream().map(Product::getId).collect(Collectors.toList());
     List<Product> productsWithRelationships =

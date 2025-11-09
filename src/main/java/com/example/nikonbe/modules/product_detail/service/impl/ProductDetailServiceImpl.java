@@ -33,7 +33,12 @@ public class ProductDetailServiceImpl implements ProductDetailService {
     }
     ProductDetail entity = mapper.toEntity(dto);
     ProductDetail saved = repository.save(entity);
-    return mapper.toDto(saved);
+    // Refetch with details to ensure color and capacity are loaded
+    ProductDetail savedWithDetails =
+        repository
+            .findByIdWithDetails(saved.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "id", saved.getId()));
+    return mapper.toDto(savedWithDetails);
   }
 
   @Override
@@ -47,7 +52,13 @@ public class ProductDetailServiceImpl implements ProductDetailService {
     }
     mapper.updateEntityFromDto(dto, entity);
     ProductDetail updated = repository.save(entity);
-    return mapper.toDto(updated);
+    // Refetch with details to ensure color and capacity are loaded
+    ProductDetail updatedWithDetails =
+        repository
+            .findByIdWithDetails(updated.getId())
+            .orElseThrow(
+                () -> new ResourceNotFoundException("ProductDetail", "id", updated.getId()));
+    return mapper.toDto(updatedWithDetails);
   }
 
   @Override
@@ -55,7 +66,7 @@ public class ProductDetailServiceImpl implements ProductDetailService {
   public ProductDetailResponseDTO getById(Integer id) {
     ProductDetail entity =
         repository
-            .findById(id)
+            .findByIdWithDetails(id)
             .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "id", id));
     return mapper.toDto(entity);
   }
@@ -63,9 +74,14 @@ public class ProductDetailServiceImpl implements ProductDetailService {
   @Override
   @Transactional(readOnly = true)
   public Page<ProductDetailResponseDTO> getAll(
-      Status status, Integer productId, Integer colorId, Integer capacityId, Pageable pageable) {
+      String sku,
+      Status status,
+      Integer productId,
+      Integer colorId,
+      Integer capacityId,
+      Pageable pageable) {
     Page<ProductDetail> page =
-        repository.findAllWithFilters(status, productId, colorId, capacityId, pageable);
+        repository.findAllWithFilters(sku, status, productId, colorId, capacityId, pageable);
     return page.map(mapper::toDto);
   }
 
