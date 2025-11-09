@@ -20,10 +20,7 @@ public class CreateCustomerDTO {
   private String fullName;
   private String phoneNumber;
   private LocalDate dateOfBirth;
-  @Builder.Default
-  private String gender = "null";
-  @Builder.Default
-  private Boolean isGuest = false;
+  @Builder.Default private String gender = "null";
+  @Builder.Default private Boolean isGuest = false;
   private Status status;
 }
-
