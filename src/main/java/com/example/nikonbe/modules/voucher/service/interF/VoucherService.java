@@ -1,14 +1,14 @@
 package com.example.nikonbe.modules.voucher.service.interF;
 
 import com.example.nikonbe.common.enums.Status;
+import com.example.nikonbe.common.response.ApiResponseDto;
 import com.example.nikonbe.modules.voucher.dto.request.VoucherCreateDTO;
 import com.example.nikonbe.modules.voucher.dto.request.VoucherUpdateDTO;
 import com.example.nikonbe.modules.voucher.dto.response.VoucherDiscountResponseDTO;
 import com.example.nikonbe.modules.voucher.dto.response.VoucherResponseDTO;
+import com.example.nikonbe.modules.voucher.dto.response.VoucherWithCustomersResponseDTO;
 import java.math.BigDecimal;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface VoucherService {
 
@@ -18,10 +18,21 @@ public interface VoucherService {
 
   VoucherResponseDTO getById(Long id);
 
-  VoucherResponseDTO getByCode(String code);
+  VoucherWithCustomersResponseDTO getByIdWithCustomers(Long id);
 
-  Page<VoucherResponseDTO> getAllVouchers(
-      String code, Status status, String discountType, Boolean isPublic, Pageable pageable);
+  VoucherResponseDTO getByCode(String code, Integer customerId);
+
+  ApiResponseDto<List<VoucherResponseDTO>> getAllVouchers(
+      String code,
+      Status status,
+      String discountType,
+      Boolean isPublic,
+      boolean isAll,
+      String sortBy,
+      String sortDir,
+      int page,
+      int size,
+      Integer customerId);
 
   List<VoucherResponseDTO> getPublicActiveVouchers();
 

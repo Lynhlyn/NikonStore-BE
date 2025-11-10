@@ -12,6 +12,7 @@ import com.example.nikonbe.modules.customervoucher.repository.CustomerVoucherRep
 import com.example.nikonbe.modules.customervoucher.service.interF.CustomerVoucherService;
 import com.example.nikonbe.modules.voucher.entity.Voucher;
 import com.example.nikonbe.modules.voucher.repository.VoucherRepository;
+import com.example.nikonbe.security.service.mail.EmailService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class CustomerVoucherServiceImpl implements CustomerVoucherService {
   private final CustomerRepository customerRepository;
   private final VoucherRepository voucherRepository;
   private final CustomerVoucherMapper customerVoucherMapper;
+  private final EmailService emailService;
 
   @Override
   @Transactional
@@ -65,6 +67,29 @@ public class CustomerVoucherServiceImpl implements CustomerVoucherService {
         CustomerVoucher customerVoucher = customerVoucherMapper.createEntity(customer, voucher);
         assignedVouchers.add(customerVoucherRepository.save(customerVoucher));
         log.info("Assigned voucher ID {} to customer ID {}", voucherId, dto.getCustomerId());
+
+        if (!voucher.getIsPublic()) {
+          try {
+            emailService.sendVoucherAssignedEmail(
+                customer.getEmail(),
+                customer.getFullName(),
+                voucher.getCode(),
+                voucher.getDescription() != null ? voucher.getDescription() : voucher.getCode(),
+                voucher.getDiscountValue(),
+                voucher.getDiscountType(),
+                voucher.getEndDate());
+            log.info(
+                "Sent voucher assignment email to customer {} for voucher {}",
+                customer.getEmail(),
+                voucher.getCode());
+          } catch (Exception e) {
+            log.error(
+                "Failed to send voucher assignment email to customer {} for voucher {}: {}",
+                customer.getEmail(),
+                voucher.getCode(),
+                e.getMessage());
+          }
+        }
       } catch (Exception e) {
         errors.add("Lỗi gán voucher với ID " + voucherId + ": " + e.getMessage());
         log.error(
@@ -110,6 +135,29 @@ public class CustomerVoucherServiceImpl implements CustomerVoucherService {
         CustomerVoucher customerVoucher = customerVoucherMapper.createEntity(customer, voucher);
         customerVoucherRepository.save(customerVoucher);
         log.info("Assigned voucher ID {} to customer ID {}", voucherId, customerId);
+
+        if (!voucher.getIsPublic()) {
+          try {
+            emailService.sendVoucherAssignedEmail(
+                customer.getEmail(),
+                customer.getFullName(),
+                voucher.getCode(),
+                voucher.getDescription() != null ? voucher.getDescription() : voucher.getCode(),
+                voucher.getDiscountValue(),
+                voucher.getDiscountType(),
+                voucher.getEndDate());
+            log.info(
+                "Sent voucher assignment email to customer {} for voucher {}",
+                customer.getEmail(),
+                voucher.getCode());
+          } catch (Exception e) {
+            log.error(
+                "Failed to send voucher assignment email to customer {} for voucher {}: {}",
+                customer.getEmail(),
+                voucher.getCode(),
+                e.getMessage());
+          }
+        }
       } catch (Exception e) {
         errors.add("Lỗi gán cho khách hàng ID " + customerId + ": " + e.getMessage());
         log.error(

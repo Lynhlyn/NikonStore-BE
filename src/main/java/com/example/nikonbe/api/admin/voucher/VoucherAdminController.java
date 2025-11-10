@@ -7,6 +7,7 @@ import com.example.nikonbe.modules.voucher.dto.request.VoucherCreateDTO;
 import com.example.nikonbe.modules.voucher.dto.request.VoucherUpdateDTO;
 import com.example.nikonbe.modules.voucher.dto.response.VoucherDiscountResponseDTO;
 import com.example.nikonbe.modules.voucher.dto.response.VoucherResponseDTO;
+import com.example.nikonbe.modules.voucher.dto.response.VoucherWithCustomersResponseDTO;
 import com.example.nikonbe.modules.voucher.service.interF.VoucherService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,14 +19,12 @@ import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("${api.admin.version}n/vouchers")
+@RequestMapping("${api.admin.version}/vouchers")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Voucher Management", description = "Các API quản lý voucher dành cho admin")
 public class VoucherAdminController {
@@ -94,10 +93,28 @@ public class VoucherAdminController {
     return ResponseUtils.success(result, "Lấy thông tin voucher thành công");
   }
 
+  @GetMapping("/{id}/with-customers")
+  @Operation(
+      summary = "Lấy thông tin voucher theo ID kèm danh sách khách hàng đã gán",
+      description = "Lấy chi tiết voucher và danh sách khách hàng đã được gán voucher")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Lấy thành công",
+      content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+  public ResponseEntity<ApiResponseDto<VoucherWithCustomersResponseDTO>> getByIdWithCustomers(
+      @Parameter(description = "ID voucher") @PathVariable Long id) {
+    VoucherWithCustomersResponseDTO result = voucherService.getByIdWithCustomers(id);
+    return ResponseUtils.success(
+        result, "Lấy thông tin voucher với danh sách khách hàng thành công");
+  }
+
   @GetMapping
   @Operation(
       summary = "Lấy danh sách voucher",
-      description = "Lấy tất cả voucher với lọc và phân trang")
+      description =
+          "Lấy tất cả voucher với lọc và phân trang. "
+              + "Nếu có customerId, sẽ trả về voucher khả dụng cho khách hàng đó (public + private được cấp quyền). "
+              + "Nếu không có customerId, sẽ trả về tất cả voucher theo quyền admin.")
   @ApiResponse(
       responseCode = "200",
       description = "Lấy thành công",
@@ -107,11 +124,21 @@ public class VoucherAdminController {
       @Parameter(description = "Trạng thái") @RequestParam(required = false) Status status,
       @Parameter(description = "Loại giảm giá") @RequestParam(required = false) String discountType,
       @Parameter(description = "Công khai") @RequestParam(required = false) Boolean isPublic,
-      Pageable pageable) {
+      @Parameter(description = "Lấy tất cả") @RequestParam(defaultValue = "false") boolean isAll,
+      @Parameter(description = "Sắp xếp theo") @RequestParam(defaultValue = "id") String sortBy,
+      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "desc") String sortDir,
+      @Parameter(description = "Số trang") @RequestParam(defaultValue = "0") int page,
+      @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size,
+      @Parameter(
+              description =
+                  "ID khách hàng (optional) - nếu có sẽ trả về voucher khả dụng cho khách hàng")
+          @RequestParam(required = false)
+          Integer customerId) {
 
-    Page<VoucherResponseDTO> result =
-        voucherService.getAllVouchers(code, status, discountType, isPublic, pageable);
-    return ResponseUtils.successWithPage(result, "Lấy danh sách voucher thành công");
+    ApiResponseDto<List<VoucherResponseDTO>> response =
+        voucherService.getAllVouchers(
+            code, status, discountType, isPublic, isAll, sortBy, sortDir, page, size, customerId);
+    return ResponseEntity.ok(response);
   }
 
   @GetMapping("/public/active")
@@ -144,8 +171,10 @@ public class VoucherAdminController {
       description = "Lấy thành công",
       content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
   public ResponseEntity<ApiResponseDto<VoucherResponseDTO>> getByCode(
-      @Parameter(description = "Mã code voucher") @PathVariable String code) {
-    VoucherResponseDTO result = voucherService.getByCode(code);
+      @Parameter(description = "Mã code voucher") @PathVariable String code,
+      @Parameter(description = "ID khách hàng (optional)") @RequestParam(required = false)
+          Integer customerId) {
+    VoucherResponseDTO result = voucherService.getByCode(code, customerId);
     return ResponseUtils.success(result, "Lấy thông tin voucher thành công");
   }
 
