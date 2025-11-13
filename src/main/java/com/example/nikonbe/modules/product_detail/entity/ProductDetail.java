@@ -6,6 +6,7 @@ import com.example.nikonbe.common.utils.StatusConverter;
 import com.example.nikonbe.modules.attributes.capacity.entity.Capacity;
 import com.example.nikonbe.modules.attributes.color.entity.Color;
 import com.example.nikonbe.modules.product.entity.Product;
+import com.example.nikonbe.modules.promotion.entity.Promotion;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -43,6 +44,10 @@ public class ProductDetail extends BaseEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "capacity_id", foreignKey = @ForeignKey(name = "fk_pd_capacity"))
   private Capacity capacity;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "promotion_id", foreignKey = @ForeignKey(name = "fk_product_detail_promotion"))
+  private Promotion promotion;
 
   @Column(nullable = false, precision = 15, scale = 0)
   private BigDecimal price;
