@@ -2,6 +2,7 @@ package com.example.nikonbe.modules.product_detail.repository;
 
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import java.math.BigDecimal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -49,4 +50,39 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, In
       @Param("colorId") Integer colorId,
       @Param("capacityId") Integer capacityId,
       Pageable pageable);
+
+  @Query(
+      "SELECT pd FROM ProductDetail pd "
+          + "LEFT JOIN FETCH pd.product p "
+          + "LEFT JOIN FETCH pd.color c "
+          + "LEFT JOIN FETCH pd.capacity cap "
+          + "LEFT JOIN FETCH pd.promotion pr "
+          + "WHERE "
+          + "(:productId IS NULL OR pd.product.id = :productId) AND "
+          + "(:sku IS NULL OR pd.sku LIKE %:sku%) AND "
+          + "(:colorId IS NULL OR pd.color.id = :colorId) AND "
+          + "(:capacityId IS NULL OR pd.capacity.id = :capacityId) AND "
+          + "(:status IS NULL OR pd.status = :status) AND "
+          + "(:minPrice IS NULL OR pd.price >= :minPrice) AND "
+          + "(:maxPrice IS NULL OR pd.price <= :maxPrice) AND "
+          + "(:promotionId IS NULL OR pd.promotion.id = :promotionId)")
+  Page<ProductDetail> findByFilters(
+      @Param("productId") Integer productId,
+      @Param("sku") String sku,
+      @Param("colorId") Integer colorId,
+      @Param("capacityId") Integer capacityId,
+      @Param("status") Status status,
+      @Param("minPrice") BigDecimal minPrice,
+      @Param("maxPrice") BigDecimal maxPrice,
+      @Param("promotionId") Integer promotionId,
+      Pageable pageable);
+
+  @Query(
+      "SELECT pd FROM ProductDetail pd "
+          + "LEFT JOIN FETCH pd.product p "
+          + "LEFT JOIN FETCH pd.color c "
+          + "LEFT JOIN FETCH pd.capacity cap "
+          + "LEFT JOIN FETCH pd.promotion pr "
+          + "WHERE pd.sku = :sku AND pd.status = :status")
+  Optional<ProductDetail> findBySkuAndStatus(@Param("sku") String sku, @Param("status") Status status);
 }
