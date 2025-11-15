@@ -1013,10 +1013,7 @@ public class PosServiceImpl implements PosService {
     ProductDetail productDetail =
         productDetailRepository
             .findBySkuAndStatus(sku.trim(), Status.ACTIVE)
-            .orElseThrow(
-                () ->
-                    new ResourceNotFoundException(
-                        "ProductDetail", "sku", sku.trim()));
+            .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "sku", sku.trim()));
 
     return mapToProductDetailPosResponse(productDetail);
   }

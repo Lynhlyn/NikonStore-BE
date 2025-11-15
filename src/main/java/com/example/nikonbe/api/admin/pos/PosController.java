@@ -206,7 +206,8 @@ public class PosController {
       @Parameter(description = "SKU để tìm kiếm") @RequestParam(required = false) String sku) {
     String searchValue = sku != null ? sku : slug;
     if (searchValue == null || searchValue.trim().isEmpty()) {
-      return ResponseUtils.error("SKU hoặc slug không được để trống", org.springframework.http.HttpStatus.BAD_REQUEST);
+      return ResponseUtils.error(
+          "SKU hoặc slug không được để trống", org.springframework.http.HttpStatus.BAD_REQUEST);
     }
     ProductDetailPosResponse response = posService.searchProductDetailBySlug(searchValue);
     return ResponseUtils.success(response, "Tìm kiếm product detail thành công");
