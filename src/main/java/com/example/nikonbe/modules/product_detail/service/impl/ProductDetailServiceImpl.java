@@ -3,6 +3,7 @@ package com.example.nikonbe.modules.product_detail.service.impl;
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.exceptions.ResourceAlreadyExistsException;
 import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
+import com.example.nikonbe.modules.color_image.repository.ColorImageRepository;
 import com.example.nikonbe.modules.product_detail.dto.request.ProductDetailCreateDTO;
 import com.example.nikonbe.modules.product_detail.dto.request.ProductDetailUpdateDTO;
 import com.example.nikonbe.modules.product_detail.dto.response.ProductDetailResponseDTO;
@@ -25,6 +26,7 @@ public class ProductDetailServiceImpl implements ProductDetailService {
 
   private final ProductDetailRepository repository;
   private final ProductDetailMapper mapper;
+  private final ColorImageRepository colorImageRepository;
 
   @Override
   public ProductDetailResponseDTO create(ProductDetailCreateDTO dto) {
@@ -38,7 +40,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         repository
             .findByIdWithDetails(saved.getId())
             .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "id", saved.getId()));
-    return mapper.toDto(savedWithDetails);
+    ProductDetailResponseDTO responseDto = mapper.toDto(savedWithDetails);
+    enrichWithColorImage(responseDto);
+    return responseDto;
   }
 
   @Override
@@ -58,7 +62,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
             .findByIdWithDetails(updated.getId())
             .orElseThrow(
                 () -> new ResourceNotFoundException("ProductDetail", "id", updated.getId()));
-    return mapper.toDto(updatedWithDetails);
+    ProductDetailResponseDTO responseDto = mapper.toDto(updatedWithDetails);
+    enrichWithColorImage(responseDto);
+    return responseDto;
   }
 
   @Override
@@ -68,7 +74,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         repository
             .findByIdWithDetails(id)
             .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "id", id));
-    return mapper.toDto(entity);
+    ProductDetailResponseDTO responseDto = mapper.toDto(entity);
+    enrichWithColorImage(responseDto);
+    return responseDto;
   }
 
   @Override
@@ -82,7 +90,9 @@ public class ProductDetailServiceImpl implements ProductDetailService {
       Pageable pageable) {
     Page<ProductDetail> page =
         repository.findAllWithFilters(sku, status, productId, colorId, capacityId, pageable);
-    return page.map(mapper::toDto);
+    Page<ProductDetailResponseDTO> dtoPage = page.map(mapper::toDto);
+    dtoPage.getContent().forEach(this::enrichWithColorImage);
+    return dtoPage;
   }
 
   @Override
@@ -93,5 +103,13 @@ public class ProductDetailServiceImpl implements ProductDetailService {
             .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "id", id));
     entity.setStatus(Status.DELETED);
     repository.save(entity);
+  }
+
+  private void enrichWithColorImage(ProductDetailResponseDTO dto) {
+    if (dto.getProductId() != null && dto.getColorId() != null) {
+      colorImageRepository
+          .findByProductIdAndColorId(dto.getProductId(), dto.getColorId())
+          .ifPresent(colorImage -> dto.setColorImageUrl(colorImage.getImageUrl()));
+    }
   }
 }

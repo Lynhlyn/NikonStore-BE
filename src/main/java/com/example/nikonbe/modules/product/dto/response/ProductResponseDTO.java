@@ -5,8 +5,8 @@ import com.example.nikonbe.modules.attributes.brand.dto.response.BrandResponseDT
 import com.example.nikonbe.modules.attributes.category.dto.response.CategoryResponseDTO;
 import com.example.nikonbe.modules.attributes.material.dto.response.MaterialResponseDTO;
 import com.example.nikonbe.modules.attributes.strape_type.dto.response.StrapTypeResponseDTO;
+import com.example.nikonbe.modules.color_image.dto.response.ColorImageResponseDTO;
 import com.example.nikonbe.modules.product_feature.dto.response.ProductFeatureResponseDTO;
-import com.example.nikonbe.modules.product_image.dto.response.ProductImageResponseDTO;
 import com.example.nikonbe.modules.product_tag.dto.response.ProductTagResponseDTO;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,7 +29,7 @@ public class ProductResponseDTO {
   private Double weight;
   private String waterproofRating;
   private Status status;
-  private List<ProductImageResponseDTO> images;
+  private List<ColorImageResponseDTO> colorImages;
   private List<ProductTagResponseDTO> tags;
   private List<ProductFeatureResponseDTO> features;
   private LocalDateTime createdAt;

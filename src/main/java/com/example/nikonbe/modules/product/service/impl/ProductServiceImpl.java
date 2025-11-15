@@ -3,6 +3,8 @@ package com.example.nikonbe.modules.product.service.impl;
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.exceptions.ResourceAlreadyExistsException;
 import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
+import com.example.nikonbe.modules.color_image.mapper.ColorImageMapper;
+import com.example.nikonbe.modules.color_image.repository.ColorImageRepository;
 import com.example.nikonbe.modules.product.dto.request.ProductCreateDTO;
 import com.example.nikonbe.modules.product.dto.request.ProductUpdateDTO;
 import com.example.nikonbe.modules.product.dto.response.ProductResponseDTO;
@@ -12,8 +14,6 @@ import com.example.nikonbe.modules.product.repository.ProductRepository;
 import com.example.nikonbe.modules.product.service.interF.ProductService;
 import com.example.nikonbe.modules.product_feature.mapper.ProductFeatureMapper;
 import com.example.nikonbe.modules.product_feature.repository.ProductFeatureRepository;
-import com.example.nikonbe.modules.product_image.mapper.ProductImageMapper;
-import com.example.nikonbe.modules.product_image.repository.ProductImageRepository;
 import com.example.nikonbe.modules.product_tag.mapper.ProductTagMapper;
 import com.example.nikonbe.modules.product_tag.repository.ProductTagRepository;
 import java.util.List;
@@ -33,17 +33,17 @@ public class ProductServiceImpl implements ProductService {
 
   private final ProductRepository repository;
   private final ProductMapper mapper;
-  private final ProductImageRepository productImageRepository;
-  private final ProductImageMapper productImageMapper;
+  private final ColorImageRepository colorImageRepository;
+  private final ColorImageMapper colorImageMapper;
   private final ProductTagRepository productTagRepository;
   private final ProductTagMapper productTagMapper;
   private final ProductFeatureRepository productFeatureRepository;
   private final ProductFeatureMapper productFeatureMapper;
 
   private ProductResponseDTO enrichWithRelationships(ProductResponseDTO dto) {
-    List<com.example.nikonbe.modules.product_image.entity.ProductImage> images =
-        productImageRepository.findByProductIdOrderBySortOrderAsc(dto.getId());
-    dto.setImages(productImageMapper.toDtoList(images));
+    List<com.example.nikonbe.modules.color_image.entity.ColorImage> colorImages =
+        colorImageRepository.findByProductIdWithDetails(dto.getId());
+    dto.setColorImages(colorImageMapper.toDtoList(colorImages));
 
     List<com.example.nikonbe.modules.product_tag.entity.ProductTag> tags =
         productTagRepository.findByProductId(dto.getId());
@@ -129,20 +129,20 @@ public class ProductServiceImpl implements ProductService {
                   : mapper.toDto(product);
             });
     if (!productIds.isEmpty()) {
-      List<com.example.nikonbe.modules.product_image.entity.ProductImage> allImages =
-          productImageRepository.findByProductIdInOrderByProductIdAndSortOrderAsc(productIds);
+      List<com.example.nikonbe.modules.color_image.entity.ColorImage> allColorImages =
+          colorImageRepository.findByProductIdInWithDetails(productIds);
       java.util.Map<
               Integer,
-              List<com.example.nikonbe.modules.product_image.dto.response.ProductImageResponseDTO>>
-          imagesMap =
-              allImages.stream()
+              List<com.example.nikonbe.modules.color_image.dto.response.ColorImageResponseDTO>>
+          colorImagesMap =
+              allColorImages.stream()
                   .collect(
                       Collectors.groupingBy(
                           img -> img.getProduct().getId(),
-                          Collectors.mapping(productImageMapper::toDto, Collectors.toList())));
+                          Collectors.mapping(colorImageMapper::toDto, Collectors.toList())));
       dtoPage
           .getContent()
-          .forEach(dto -> dto.setImages(imagesMap.getOrDefault(dto.getId(), List.of())));
+          .forEach(dto -> dto.setColorImages(colorImagesMap.getOrDefault(dto.getId(), List.of())));
 
       List<com.example.nikonbe.modules.product_tag.entity.ProductTag> allTags =
           productTagRepository.findByProductIdIn(productIds);

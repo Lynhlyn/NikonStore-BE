@@ -1,10 +1,9 @@
 package com.example.nikonbe.modules.order_detail.mapper;
 
+import com.example.nikonbe.modules.color_image.repository.ColorImageRepository;
 import com.example.nikonbe.modules.order_detail.dto.response.OrderDetailReponse;
 import com.example.nikonbe.modules.order_detail.entity.OrderDetail;
 import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
-import com.example.nikonbe.modules.product_image.entity.ProductImage;
-import com.example.nikonbe.modules.product_image.repository.ProductImageRepository;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -15,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
     componentModel = "spring",
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public abstract class OrderDetailMapper {
-  @Autowired ProductImageRepository productImageRepository;
+  @Autowired ColorImageRepository colorImageRepository;
 
   @Mapping(target = "orderDetailId", source = "id")
   @Mapping(target = "sku", source = "productDetail.sku")
@@ -34,18 +33,15 @@ public abstract class OrderDetailMapper {
 
   @Named("mapImageUrl")
   public String mapImageUrl(ProductDetail productDetail) {
-    if (productDetail == null || productDetail.getProduct() == null) {
+    if (productDetail == null
+        || productDetail.getProduct() == null
+        || productDetail.getColor() == null) {
       return null;
     }
-    return productImageRepository
-        .findByProductIdAndIsPrimaryTrue(productDetail.getProduct().getId())
-        .map(ProductImage::getImageUrl)
-        .orElseGet(
-            () -> {
-              var images =
-                  productImageRepository.findByProductIdOrderBySortOrderAsc(
-                      productDetail.getProduct().getId());
-              return images.isEmpty() ? null : images.get(0).getImageUrl();
-            });
+    return colorImageRepository
+        .findByProductIdAndColorId(
+            productDetail.getProduct().getId(), productDetail.getColor().getId())
+        .map(com.example.nikonbe.modules.color_image.entity.ColorImage::getImageUrl)
+        .orElse(null);
   }
 }

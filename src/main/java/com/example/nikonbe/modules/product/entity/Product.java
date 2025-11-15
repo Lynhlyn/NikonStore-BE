@@ -7,7 +7,7 @@ import com.example.nikonbe.modules.attributes.brand.entity.Brand;
 import com.example.nikonbe.modules.attributes.category.entity.Category;
 import com.example.nikonbe.modules.attributes.material.entity.Material;
 import com.example.nikonbe.modules.attributes.strape_type.entity.StrapType;
-import com.example.nikonbe.modules.product_image.entity.ProductImage;
+import com.example.nikonbe.modules.color_image.entity.ColorImage;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -68,5 +68,5 @@ public class Product extends BaseEntity {
       cascade = CascadeType.ALL,
       orphanRemoval = true,
       fetch = FetchType.LAZY)
-  private List<ProductImage> images;
+  private List<ColorImage> colorImages;
 }

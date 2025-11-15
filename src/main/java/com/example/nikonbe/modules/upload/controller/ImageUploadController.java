@@ -1,4 +1,4 @@
-package com.example.nikonbe.modules.product_image.controller;
+package com.example.nikonbe.modules.upload.controller;
 
 import com.example.nikonbe.common.helper.cloudinary.service.ImageUploadService;
 import com.example.nikonbe.common.utils.ResponseUtils;
@@ -61,11 +61,9 @@ public class ImageUploadController {
 
     List<String> urls;
     if (files.size() == 1) {
-      // Upload đơn file
       String url = imageUploadService.uploadImage(files.get(0), folder);
       urls = List.of(url);
     } else {
-      // Upload nhiều file song song
       urls = imageUploadService.uploadImages(files, folder);
     }
 
@@ -96,11 +94,9 @@ public class ImageUploadController {
 
     List<Boolean> results;
     if (imageUrls.size() == 1) {
-      // Xóa đơn file
       boolean result = imageUploadService.deleteImage(imageUrls.get(0));
       results = List.of(result);
     } else {
-      // Xóa nhiều file song song
       results = imageUploadService.deleteImages(imageUrls);
     }
 

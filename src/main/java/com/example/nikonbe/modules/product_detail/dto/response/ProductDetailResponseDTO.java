@@ -24,6 +24,7 @@ public class ProductDetailResponseDTO {
   private Integer capacityId;
   private String capacityName;
   private CapacityResponseDTO capacity;
+  private String colorImageUrl;
   private BigDecimal price;
   private Status status;
   private LocalDateTime createdAt;
