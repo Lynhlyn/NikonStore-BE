@@ -36,6 +36,7 @@ import com.example.nikonbe.modules.promotion.service.interF.PromotionService;
 import com.example.nikonbe.modules.staff.dto.response.StaffResponseDTO;
 import com.example.nikonbe.modules.staff.entity.Staff;
 import com.example.nikonbe.modules.staff.repository.StaffRepository;
+import com.example.nikonbe.modules.vnpay.service.interF.VNPayService;
 import com.example.nikonbe.modules.voucher.entity.Voucher;
 import com.example.nikonbe.modules.voucher.repository.VoucherRepository;
 import java.math.BigDecimal;
@@ -74,6 +75,7 @@ public class PosServiceImpl implements PosService {
   private final VoucherRepository voucherRepository;
   private final OrderServiceImpl orderServiceImpl;
   private final OrderDetailRepository orderDetailRepository;
+  private final VNPayService vnPayService;
 
   @Override
   public Page<ProductDetailPosResponse> getProductDetailsByProductId(
@@ -427,6 +429,11 @@ public class PosServiceImpl implements PosService {
 
     if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
       throw new IllegalArgumentException("Không thể hoàn tất đơn hàng trống");
+    }
+
+    if ("VNPAY-QR".equalsIgnoreCase(request.getPaymentMethod())) {
+      throw new IllegalArgumentException(
+          "Đơn hàng VNPAY-QR phải được thanh toán qua callback từ VNPAY");
     }
 
     if (request.getVoucherId() != null) {
@@ -1010,11 +1017,212 @@ public class PosServiceImpl implements PosService {
       throw new IllegalArgumentException("SKU không được để trống");
     }
 
-    ProductDetail productDetail =
-        productDetailRepository
-            .findBySkuAndStatus(sku.trim(), Status.ACTIVE)
-            .orElseThrow(() -> new ResourceNotFoundException("ProductDetail", "sku", sku.trim()));
+    List<ProductDetail> productDetails =
+        productDetailRepository.findBySkuAndStatus(sku.trim(), Status.ACTIVE);
+
+    if (productDetails == null || productDetails.isEmpty()) {
+      throw new ResourceNotFoundException("ProductDetail", "sku", sku.trim());
+    }
+
+    if (productDetails.size() > 1) {
+      log.warn("Multiple product details found for SKU: {}. Returning the first one.", sku.trim());
+    }
+
+    ProductDetail productDetail = productDetails.get(0);
 
     return mapToProductDetailPosResponse(productDetail);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String createVnpayQrPaymentUrl(Integer orderId, String ipAddr) {
+    log.debug("Creating VNPAY QR payment URL for order ID: {}", orderId);
+
+    Order order =
+        orderRepository
+            .findByIdWithDetails(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+
+    if (!Status.PENDING_PAYMENT.equals(order.getStatus())
+        || !"IN_STORE".equals(order.getOrderType())) {
+      throw new IllegalArgumentException(
+          "Chỉ có thể tạo payment URL cho đơn hàng POS chờ thanh toán");
+    }
+
+    if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+      throw new IllegalArgumentException("Không thể tạo payment URL cho đơn hàng trống");
+    }
+
+    recalculateOrderAmounts(order);
+    BigDecimal totalAmount = order.getTotalAmount();
+
+    String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
+    String orderIdStr = order.getTrackingNumber();
+
+    long amountInVnd = totalAmount.longValue();
+    String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr);
+
+    order.setPaymentMethod("VNPAY-QR");
+    order.setPaymentStatus("PENDING");
+    orderRepository.save(order);
+
+    return paymentUrl;
+  }
+
+  @Override
+  @Transactional(readOnly = false)
+  public String createVnpayQrCode(Integer orderId, String ipAddr, String context) {
+    log.debug("Creating VNPAY QR code for order ID: {} with context: {}", orderId, context);
+
+    Order order =
+        orderRepository
+            .findByIdWithDetails(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+
+    if (!Status.PENDING_PAYMENT.equals(order.getStatus())
+        || !"IN_STORE".equals(order.getOrderType())) {
+      throw new IllegalArgumentException("Chỉ có thể tạo QR code cho đơn hàng POS chờ thanh toán");
+    }
+
+    if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+      throw new IllegalArgumentException("Không thể tạo QR code cho đơn hàng trống");
+    }
+
+    if (context == null || context.trim().isEmpty()) {
+      context = "main";
+    }
+    if (!context.equals("main") && !context.equals("staff")) {
+      context = "main";
+    }
+
+    recalculateOrderAmounts(order);
+    BigDecimal totalAmount = order.getTotalAmount();
+
+    String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
+    String orderIdStr = order.getTrackingNumber();
+
+    long amountInVnd = totalAmount.longValue();
+    String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr);
+    String qrCodeUrl = vnPayService.generateQrCode(paymentUrl);
+
+    order.setPaymentMethod("VNPAY-QR");
+    order.setPaymentStatus("PENDING");
+
+    String currentNote = order.getNote();
+    String paymentContextMarker = "PAYMENT_CONTEXT:";
+    if (currentNote != null && currentNote.contains(paymentContextMarker)) {
+      int startIndex = currentNote.indexOf(paymentContextMarker);
+      int endIndex = currentNote.indexOf("|", startIndex);
+      if (endIndex == -1) {
+        endIndex = currentNote.length();
+      }
+      String newNote =
+          currentNote.substring(0, startIndex)
+              + paymentContextMarker
+              + context
+              + (endIndex < currentNote.length() ? currentNote.substring(endIndex) : "");
+      order.setNote(newNote);
+    } else {
+      String newNote =
+          (currentNote != null && !currentNote.trim().isEmpty() ? currentNote + "|" : "")
+              + paymentContextMarker
+              + context;
+      order.setNote(newNote);
+    }
+
+    orderRepository.save(order);
+
+    return qrCodeUrl;
+  }
+
+  @Override
+  @Transactional
+  public void handleVnpayCallback(Map<String, String> params) {
+    log.debug("Handling VNPAY callback with params: {}", params);
+
+    if (!vnPayService.verifyReturn(params)) {
+      log.error("VNPAY callback verification failed");
+      throw new IllegalArgumentException("Invalid VNPAY callback signature");
+    }
+
+    String responseCode = params.get("vnp_ResponseCode");
+    String orderId = params.get("vnp_TxnRef");
+
+    if (orderId == null || orderId.isEmpty()) {
+      throw new IllegalArgumentException("Order ID không được để trống trong callback");
+    }
+
+    Order order =
+        orderRepository
+            .findByTrackingNumber(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", "trackingNumber", orderId));
+
+    if (!Status.PENDING_PAYMENT.equals(order.getStatus())
+        || !"IN_STORE".equals(order.getOrderType())) {
+      log.warn("Order {} is not in PENDING_PAYMENT status or not IN_STORE order", orderId);
+      return;
+    }
+
+    if ("00".equals(responseCode)) {
+      recalculateOrderAmounts(order);
+
+      if (order.getVoucher() != null) {
+        Voucher voucher = order.getVoucher();
+        Integer usedCount = voucher.getUsedCount() != null ? voucher.getUsedCount() : 0;
+        voucher.setUsedCount(usedCount + 1);
+        voucherRepository.save(voucher);
+      }
+
+      order.setPaymentStatus("completed");
+      order.setStatus(Status.COMPLETED);
+
+      String currentNote = order.getNote();
+      String paymentContextMarker = "PAYMENT_CONTEXT:";
+      String paymentContext = null;
+      if (currentNote != null && currentNote.contains(paymentContextMarker)) {
+        int startIndex = currentNote.indexOf(paymentContextMarker);
+        int contextStart = startIndex + paymentContextMarker.length();
+        int contextEnd = currentNote.indexOf("|", contextStart);
+        if (contextEnd == -1) {
+          contextEnd = currentNote.length();
+        }
+        paymentContext = currentNote.substring(contextStart, contextEnd).trim();
+      }
+
+      String newNote = "Thanh toán thành công qua VNPAY-QR";
+      if (paymentContext != null
+          && (paymentContext.equals("main") || paymentContext.equals("staff"))) {
+        newNote = newNote + "|" + paymentContextMarker + paymentContext;
+      }
+      order.setNote(newNote);
+
+      Order savedOrder = orderRepository.save(order);
+
+      OrderHistory orderHistory =
+          orderServiceImpl.createOrderHistory(
+              savedOrder,
+              savedOrder.getStaff() != null ? savedOrder.getStaff().getId() : null,
+              null,
+              Status.PENDING_PAYMENT,
+              Status.COMPLETED,
+              "Thanh toán thành công qua VNPAY-QR");
+      orderHistoryRepository.save(orderHistory);
+
+      for (OrderDetail detail : order.getOrderDetails()) {
+        ProductDetail productDetail = detail.getProductDetail();
+        productDetail.setStock(productDetail.getStock() - detail.getQuantity());
+        if (productDetail.getReservedStock() != null) {
+          productDetail.setReservedStock(productDetail.getReservedStock() - detail.getQuantity());
+        }
+        productDetailRepository.save(productDetail);
+      }
+
+      log.info("Successfully completed POS order {} via VNPAY-QR", orderId);
+    } else {
+      log.warn("VNPAY payment failed for order {} with response code: {}", orderId, responseCode);
+      order.setPaymentStatus("failed");
+      order.setNote("Thanh toán VNPAY-QR thất bại - Mã lỗi: " + responseCode);
+      orderRepository.save(order);
+    }
   }
 }

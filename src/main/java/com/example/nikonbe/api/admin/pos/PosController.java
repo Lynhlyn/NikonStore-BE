@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -211,5 +212,32 @@ public class PosController {
     }
     ProductDetailPosResponse response = posService.searchProductDetailBySlug(searchValue);
     return ResponseUtils.success(response, "Tìm kiếm product detail thành công");
+  }
+
+  @PostMapping("/orders/pending/{orderId}/vnpay-qr")
+  @Operation(
+      summary = "Tạo QR code thanh toán VNPAY-QR cho đơn hàng POS",
+      description = "API tạo QR code từ VNPAY để hiển thị cho khách hàng quét thanh toán")
+  @ApiResponse(responseCode = "200", description = "Tạo QR code thành công")
+  public ResponseEntity<ApiResponseDto<String>> createVnpayQrCode(
+      @Parameter(description = "ID đơn hàng", required = true) @PathVariable Integer orderId,
+      @Parameter(description = "Context: main hoặc staff")
+          @RequestParam(required = false, defaultValue = "main")
+          String context,
+      HttpServletRequest request) {
+    String qrCodeUrl = posService.createVnpayQrCode(orderId, getClientIpAddress(request), context);
+    return ResponseUtils.success(qrCodeUrl, "Tạo QR code thành công");
+  }
+
+  private String getClientIpAddress(HttpServletRequest request) {
+    String xForwardedFor = request.getHeader("X-Forwarded-For");
+    if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+      return xForwardedFor.split(",")[0].trim();
+    }
+    String xRealIp = request.getHeader("X-Real-IP");
+    if (xRealIp != null && !xRealIp.isEmpty()) {
+      return xRealIp;
+    }
+    return request.getRemoteAddr();
   }
 }

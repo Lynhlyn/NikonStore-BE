@@ -10,6 +10,7 @@ import com.example.nikonbe.modules.pos.dto.response.PosOrderResponse;
 import com.example.nikonbe.modules.pos.dto.response.ProductDetailPosResponse;
 import com.example.nikonbe.modules.product.dto.response.ProductResponseDTO;
 import java.math.BigDecimal;
+import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -51,4 +52,10 @@ public interface PosService {
   PosOrderResponse cancelPendingOrder(Integer orderId, Integer staffId, String cancelReason);
 
   ProductDetailPosResponse searchProductDetailBySlug(String sku);
+
+  String createVnpayQrPaymentUrl(Integer orderId, String ipAddr);
+
+  String createVnpayQrCode(Integer orderId, String ipAddr, String context);
+
+  void handleVnpayCallback(Map<String, String> params);
 }
