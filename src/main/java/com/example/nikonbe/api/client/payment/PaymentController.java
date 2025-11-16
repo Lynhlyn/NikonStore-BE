@@ -11,9 +11,9 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -77,8 +77,7 @@ public class PaymentController {
 
       String redirectUrl;
       if ("00".equals(responseCode)) {
-        redirectUrl =
-            frontendAdminUrl + contextPath + "/pos?payment=success&orderId=" + orderId;
+        redirectUrl = frontendAdminUrl + contextPath + "/pos?payment=success&orderId=" + orderId;
         log.info("Payment successful for order: {}. Redirecting to: {}", orderId, redirectUrl);
       } else {
         redirectUrl =
