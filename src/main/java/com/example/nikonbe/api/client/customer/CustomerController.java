@@ -22,10 +22,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/customers")
+@RequestMapping("${api.version}/customers")
 @RequiredArgsConstructor
 @Tag(name = "Client - Customer API", description = "Customer management APIs for clients")
 public class CustomerController {
@@ -60,6 +61,24 @@ public class CustomerController {
       @Valid @RequestBody CustomerUpdateDTO dto) {
     CustomerResponseDTO result = customerService.update(id, dto);
     return ResponseUtils.success(result, "Customer updated successfully");
+  }
+
+  @GetMapping("/current")
+  @Operation(
+      summary = "Get current customer",
+      description = "Retrieve current logged-in customer information from token")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Customer retrieved successfully",
+        content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+    @ApiResponse(responseCode = "404", description = "Customer not found")
+  })
+  public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> getCurrentUser(
+      Authentication authentication) {
+    CustomerResponseDTO result = customerService.getCurrentUser(authentication);
+    return ResponseUtils.success(result, "Customer retrieved successfully");
   }
 
   @GetMapping("/{id}")

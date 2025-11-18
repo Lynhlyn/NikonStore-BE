@@ -1,11 +1,13 @@
 package com.example.nikonbe.config.security;
 
 import com.example.nikonbe.common.enums.UserRole;
+import com.example.nikonbe.security.service.provider.CustomerDetailService;
 import com.example.nikonbe.security.service.provider.StaffDetailService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -29,7 +31,9 @@ public class SecurityConfig {
 
   private final CorsConfigurationSource corsConfigurationSource;
   private final StaffJWTAuthenticationFilter staffJWTAuthenticationFilter;
+  private final CustomerJWTAuthenticationFilter customerJWTAuthenticationFilter;
   private final StaffDetailService staffDetailService;
+  private final CustomerDetailService customerDetailService;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,7 +59,9 @@ public class SecurityConfig {
                     .permitAll())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authenticationProvider(customerAuthenticationProvider())
         .authenticationProvider(staffAuthenticationProvider())
+        .addFilterBefore(customerJWTAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(staffJWTAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
@@ -67,11 +73,25 @@ public class SecurityConfig {
   }
 
   @Bean
+  public AuthenticationProvider customerAuthenticationProvider() {
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    authProvider.setUserDetailsService(customerDetailService);
+    authProvider.setPasswordEncoder(passwordEncoder());
+    return authProvider;
+  }
+
+  @Bean
   public AuthenticationProvider staffAuthenticationProvider() {
     DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
     authProvider.setUserDetailsService(staffDetailService);
     authProvider.setPasswordEncoder(passwordEncoder());
     return authProvider;
+  }
+
+  @Bean
+  @Primary
+  public AuthenticationManager authenticationManager() throws Exception {
+    return new ProviderManager(List.of(customerAuthenticationProvider()));
   }
 
   @Bean("staffAuthenticationManager")
