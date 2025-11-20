@@ -3,7 +3,10 @@ package com.example.nikonbe.modules.customer.service.impl;
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
 import com.example.nikonbe.common.exceptions.ValidationException;
+import com.example.nikonbe.common.helper.cloudinary.service.ImageUploadService;
+import com.example.nikonbe.modules.customer.dto.request.ChangePasswordDTO;
 import com.example.nikonbe.modules.customer.dto.request.CreateCustomerDTO;
+import com.example.nikonbe.modules.customer.dto.request.CustomerClientUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerFilterDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
@@ -12,6 +15,7 @@ import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.mapper.CustomerMapper;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
 import com.example.nikonbe.modules.customer.service.interF.CustomerService;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
   private final CustomerRepository customerRepository;
   private final CustomerMapper customerMapper;
   private final PasswordEncoder passwordEncoder;
+  private final ImageUploadService imageUploadService;
 
   @Override
   @Transactional
@@ -201,11 +207,16 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   @Transactional
   public void delete(Integer id) {
+    delete(id, "Customer requested deletion");
+  }
+
+  @Override
+  @Transactional
+  public void delete(Integer id, String reason) {
     Customer customer = findCustomerById(id);
     customer.setStatus(Status.DELETED);
     customerRepository.save(customer);
-
-    log.info("Soft deleted customer with ID: {}", id);
+    log.info("Soft deleted customer with ID: {}, Reason: {}", id, reason);
   }
 
   @Override
@@ -362,6 +373,120 @@ public class CustomerServiceImpl implements CustomerService {
 
     if (!errors.isEmpty()) {
       throw new ValidationException("Validation failed", errors);
+    }
+  }
+
+  @Override
+  @Transactional
+  public CustomerResponseDTO updateClientInfo(
+      Integer id, CustomerClientUpdateDTO dto, MultipartFile image) throws IOException {
+    log.info("Updating client info for customer ID: {}", id);
+
+    Customer customer = findCustomerById(id);
+    validateClientUpdateRequest(dto, id);
+
+    updateClientFields(customer, dto, image != null && !image.isEmpty());
+
+    if (image != null && !image.isEmpty()) {
+      log.debug("Uploading new image");
+      String imageUrl = imageUploadService.uploadImage(image, "customer");
+      customer.setUrlImage(imageUrl);
+      log.info("Updated image URL from Cloudinary: {}", imageUrl);
+    }
+
+    Customer savedCustomer = customerRepository.save(customer);
+    log.info(
+        "Customer info updated - ID: {}, urlImage: {}",
+        savedCustomer.getId(),
+        savedCustomer.getUrlImage());
+
+    return customerMapper.toDto(savedCustomer);
+  }
+
+  @Override
+  @Transactional
+  public void changePassword(Integer customerId, ChangePasswordDTO dto) {
+    Customer customer = findCustomerById(customerId);
+    validatePasswordChange(dto, customer);
+
+    customer.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+    customerRepository.save(customer);
+
+    log.info("Password changed for customer ID: {}", customerId);
+  }
+
+  private void updateClientFields(
+      Customer customer, CustomerClientUpdateDTO dto, boolean hasUploadedImage) {
+    if (dto.getUsername() != null) {
+      customer.setUsername(dto.getUsername().trim());
+    }
+    if (dto.getEmail() != null) {
+      customer.setEmail(dto.getEmail().trim());
+    }
+    if (dto.getFullName() != null) {
+      customer.setFullName(dto.getFullName().trim());
+    }
+    if (dto.getPhoneNumber() != null) {
+      customer.setPhoneNumber(dto.getPhoneNumber().trim());
+    }
+    if (dto.getDateOfBirth() != null) {
+      customer.setDateOfBirth(dto.getDateOfBirth());
+    }
+    if (dto.getGender() != null) {
+      customer.setGender(dto.getGender().trim());
+    }
+    if (!hasUploadedImage && dto.getUrlImage() != null) {
+      customer.setUrlImage(dto.getUrlImage());
+    }
+  }
+
+  private void validateClientUpdateRequest(CustomerClientUpdateDTO dto, Integer customerId) {
+    Map<String, String> errors = new HashMap<>();
+
+    if (dto.getUsername() != null) {
+      if (customerRepository.existsByUsernameAndIdNot(dto.getUsername(), customerId)) {
+        errors.put("username", "Username already exists");
+      }
+    }
+
+    if (dto.getEmail() != null) {
+      if (customerRepository.existsByEmailAndIdNot(dto.getEmail(), customerId)) {
+        errors.put("email", "Email already exists");
+      }
+    }
+
+    if (dto.getPhoneNumber() != null) {
+      if (customerRepository.existsByPhoneNumberAndIdNot(dto.getPhoneNumber(), customerId)) {
+        errors.put("phoneNumber", "Phone number already exists");
+      }
+    }
+
+    if (!errors.isEmpty()) {
+      throw new ValidationException("Validation failed", errors);
+    }
+  }
+
+  private void validatePasswordChange(ChangePasswordDTO dto, Customer customer) {
+    Map<String, String> errors = new HashMap<>();
+
+    if (!passwordEncoder.matches(dto.getCurrentPassword(), customer.getPassword())) {
+      errors.put("currentPassword", "Current password is incorrect");
+    }
+
+    if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+      errors.put("confirmPassword", "Confirm password does not match");
+    }
+
+    if (passwordEncoder.matches(dto.getNewPassword(), customer.getPassword())) {
+      errors.put("newPassword", "New password must be different from current password");
+    }
+
+    if (dto.getNewPassword().length() < 8 || dto.getNewPassword().length() > 32) {
+      errors.put("newPassword", "Password must be between 8-32 characters");
+    }
+
+    if (!errors.isEmpty()) {
+      throw new ValidationException("Password change validation failed", errors);
     }
   }
 }
