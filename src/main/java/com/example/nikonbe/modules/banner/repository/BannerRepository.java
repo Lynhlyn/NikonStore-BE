@@ -14,9 +14,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BannerRepository extends JpaRepository<Banner, Long> {
 
-  List<Banner> findByStatusOrderByDisplayOrderAsc(Status status);
-
-  List<Banner> findByPositionAndStatusOrderByDisplayOrderAsc(Integer position, Status status);
+  @Query("SELECT b FROM Banner b WHERE b.status = :status ORDER BY b.displayOrder ASC")
+  List<Banner> findByStatusOrderByDisplayOrderAsc(@Param("status") Status status);
 
   Page<Banner> findByStatusOrderByDisplayOrderAsc(Status status, Pageable pageable);
 

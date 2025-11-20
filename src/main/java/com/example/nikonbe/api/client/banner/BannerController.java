@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/banners")
+@RequestMapping("${api.version}/banners")
 @RequiredArgsConstructor
 @Tag(name = "Client - Banner", description = "API lấy banner cho client")
 public class BannerController {
