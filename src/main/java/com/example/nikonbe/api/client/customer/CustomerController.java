@@ -4,10 +4,15 @@ import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.response.ApiResponseDto;
 import com.example.nikonbe.common.utils.PaginationUtils;
 import com.example.nikonbe.common.utils.ResponseUtils;
+import com.example.nikonbe.modules.customer.dto.request.ChangePasswordDTO;
+import com.example.nikonbe.modules.customer.dto.request.CustomerClientUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
+import com.example.nikonbe.modules.customer.dto.request.DeleteCustomerDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
 import com.example.nikonbe.modules.customer.service.interF.CustomerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,14 +21,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("${api.version}/customers")
@@ -32,6 +40,7 @@ import org.springframework.web.bind.annotation.*;
 public class CustomerController {
 
   private final CustomerService customerService;
+  private final ObjectMapper objectMapper;
 
   @PostMapping
   @Operation(summary = "Create a new customer", description = "Register a new customer account")
@@ -128,8 +137,80 @@ public class CustomerController {
     @ApiResponse(responseCode = "404", description = "Customer not found")
   })
   public ResponseEntity<ApiResponseDto<Void>> delete(
-      @Parameter(description = "Customer ID") @PathVariable Integer id) {
-    customerService.delete(id);
+      @Parameter(description = "Customer ID") @PathVariable Integer id,
+      @Valid @RequestBody DeleteCustomerDTO dto) {
+    customerService.delete(id, dto.getReason());
     return ResponseUtils.success(null, "Customer deleted successfully");
+  }
+
+  @PutMapping(path = "/{id}/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(
+      summary = "Update customer profile",
+      description = "Update customer profile with optional image")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Profile updated successfully",
+        content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+    @ApiResponse(responseCode = "400", description = "Invalid data"),
+    @ApiResponse(responseCode = "404", description = "Customer not found")
+  })
+  public ResponseEntity<ApiResponseDto<CustomerResponseDTO>> updateProfile(
+      @Parameter(description = "Customer ID") @PathVariable Integer id,
+      @RequestPart("customer") String customerJson,
+      @RequestPart(value = "image", required = false) MultipartFile image)
+      throws IOException {
+    try {
+      CustomerClientUpdateDTO dto =
+          objectMapper.readValue(customerJson, CustomerClientUpdateDTO.class);
+      CustomerResponseDTO result = customerService.updateClientInfo(id, dto, image);
+      return ResponseUtils.success(result, "Profile updated successfully");
+    } catch (JsonProcessingException e) {
+      ApiResponseDto<CustomerResponseDTO> errorResponse =
+          ApiResponseDto.<CustomerResponseDTO>builder()
+              .status(HttpStatus.BAD_REQUEST.value())
+              .message("Invalid JSON data: " + e.getMessage())
+              .build();
+      return ResponseEntity.badRequest().body(errorResponse);
+    }
+  }
+
+  @PostMapping("/{id}/change-password")
+  @Operation(summary = "Change password", description = "Change customer password")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Password changed successfully",
+        content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid password or current password incorrect"),
+    @ApiResponse(responseCode = "404", description = "Customer not found")
+  })
+  public ResponseEntity<ApiResponseDto<Void>> changePassword(
+      @Parameter(description = "Customer ID") @PathVariable Integer id,
+      @Valid @RequestBody ChangePasswordDTO dto) {
+    customerService.changePassword(id, dto);
+    return ResponseUtils.success(null, "Password changed successfully");
+  }
+
+  @PutMapping("/{id}/deactivate")
+  @Operation(summary = "Deactivate account", description = "Deactivate customer account")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Account deactivated successfully",
+        content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+    @ApiResponse(responseCode = "404", description = "Customer not found")
+  })
+  public ResponseEntity<ApiResponseDto<Void>> deactivateAccount(
+      @Parameter(description = "Customer ID") @PathVariable Integer id,
+      @RequestBody(required = false) java.util.Map<String, String> request) {
+    String reason =
+        (request != null && request.get("reason") != null)
+            ? request.get("reason")
+            : "Customer requested deactivation";
+    customerService.delete(id, reason);
+    return ResponseUtils.success(null, "Account deactivated successfully");
   }
 }

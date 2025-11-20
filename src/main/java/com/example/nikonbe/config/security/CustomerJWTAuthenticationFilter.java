@@ -30,9 +30,7 @@ public class CustomerJWTAuthenticationFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      FilterChain filterChain)
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
     String requestPath = request.getServletPath();
@@ -99,4 +97,3 @@ public class CustomerJWTAuthenticationFilter extends OncePerRequestFilter {
     new ObjectMapper().writeValue(response.getWriter(), body);
   }
 }
-
