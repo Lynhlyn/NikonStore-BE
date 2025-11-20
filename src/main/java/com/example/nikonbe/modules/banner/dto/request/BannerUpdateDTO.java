@@ -39,17 +39,14 @@ public class BannerUpdateDTO {
       required = true)
   private String imageUrl;
 
-  @NotBlank(message = "Vị trí không được để trống")
+  @NotNull(message = "Vị trí không được để trống")
   @Schema(
-      description = "Vị trí hiển thị của banner",
-      example = "homepage-carousel",
+      description = "Vị trí hiển thị của banner (0: top, 1: right, 2: bottom, 3: left)",
+      example = "0",
       required = true)
-  private String position;
+  private Integer position;
 
   @PositiveOrZero(message = "Thứ tự hiển thị phải là số dương hoặc 0")
   @Schema(description = "Thứ tự hiển thị", example = "1")
   private Integer displayOrder;
-
-  @Schema(description = "Trạng thái hoạt động", example = "true")
-  private Boolean isActive;
 }

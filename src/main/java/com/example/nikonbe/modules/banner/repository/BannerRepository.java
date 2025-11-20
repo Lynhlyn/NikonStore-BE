@@ -14,33 +14,25 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BannerRepository extends JpaRepository<Banner, Long> {
 
-  List<Banner> findByStatusAndIsActiveTrueOrderByDisplayOrderAsc(Status status);
+  List<Banner> findByStatusOrderByDisplayOrderAsc(Status status);
 
-  List<Banner> findByPositionAndStatusAndIsActiveTrueOrderByDisplayOrderAsc(
-      String position, Status status);
+  List<Banner> findByPositionAndStatusOrderByDisplayOrderAsc(Integer position, Status status);
 
-  Page<Banner> findByStatusAndIsActiveTrueOrderByDisplayOrderAsc(Status status, Pageable pageable);
+  Page<Banner> findByStatusOrderByDisplayOrderAsc(Status status, Pageable pageable);
 
   @Query(
       "SELECT b FROM Banner b WHERE "
           + "(:status IS NULL OR b.status = :status) AND "
-          + "(:position IS NULL OR b.position = :position) AND "
-          + "(:isActive IS NULL OR b.isActive = :isActive)")
+          + "(:position IS NULL OR b.position = :position)")
   Page<Banner> findAllWithFilters(
-      @Param("status") Status status,
-      @Param("position") String position,
-      @Param("isActive") Boolean isActive,
-      Pageable pageable);
+      @Param("status") Status status, @Param("position") Integer position, Pageable pageable);
 
   @Query(
       "SELECT b FROM Banner b WHERE "
           + "(:status IS NULL OR b.status = :status) AND "
-          + "(:position IS NULL OR b.position = :position) AND "
-          + "(:isActive IS NULL OR b.isActive = :isActive)")
+          + "(:position IS NULL OR b.position = :position)")
   List<Banner> findAllWithFiltersList(
-      @Param("status") Status status,
-      @Param("position") String position,
-      @Param("isActive") Boolean isActive);
+      @Param("status") Status status, @Param("position") Integer position);
 
   Optional<Banner> findByNameAndIdNot(String name, Long id);
 

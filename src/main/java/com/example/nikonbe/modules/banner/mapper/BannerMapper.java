@@ -11,6 +11,8 @@ import org.mapstruct.*;
 public interface BannerMapper {
 
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   Banner toEntity(BannerCreateDTO dto);
 
   @Mapping(target = "id", ignore = true)

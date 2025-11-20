@@ -26,8 +26,9 @@ public class BannerController {
   @Operation(summary = "Lấy danh sách banner", description = "Lấy danh sách banner đang hoạt động")
   @ApiResponse(responseCode = "200", description = "Lấy danh sách banner thành công")
   public ResponseEntity<ApiResponseDto<List<BannerResponseDTO>>> getAllBanners(
-      @Parameter(description = "Vị trí banner") @RequestParam(value = "position", required = false)
-          String position) {
+      @Parameter(description = "Vị trí banner (0: top, 1: right, 2: bottom, 3: left)")
+          @RequestParam(value = "position", required = false)
+          Integer position) {
 
     List<BannerResponseDTO> result = bannerService.getAll(Status.ACTIVE, position);
     return ResponseUtils.success(result, "Lấy danh sách banner thành công");
@@ -47,10 +48,12 @@ public class BannerController {
   @GetMapping("/position/{position}")
   @Operation(
       summary = "Lấy banner theo vị trí",
-      description = "Lấy danh sách banner theo vị trí cụ thể")
+      description =
+          "Lấy danh sách banner theo vị trí cụ thể (0: top, 1: right, 2: bottom, 3: left)")
   @ApiResponse(responseCode = "200", description = "Lấy banner theo vị trí thành công")
   public ResponseEntity<ApiResponseDto<List<BannerResponseDTO>>> getBannersByPosition(
-      @Parameter(description = "Vị trí banner") @PathVariable String position) {
+      @Parameter(description = "Vị trí banner (0: top, 1: right, 2: bottom, 3: left)") @PathVariable
+          Integer position) {
 
     List<BannerResponseDTO> result = bannerService.getActiveBannersByPosition(position);
     return ResponseUtils.success(result, "Lấy banner theo vị trí thành công");

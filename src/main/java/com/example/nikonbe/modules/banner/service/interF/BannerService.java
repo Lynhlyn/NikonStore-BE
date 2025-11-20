@@ -16,11 +16,11 @@ public interface BannerService {
 
   BannerResponseDTO getById(Long id);
 
-  List<BannerResponseDTO> getAll(Status status, String position);
+  List<BannerResponseDTO> getAll(Status status, Integer position);
 
-  Page<BannerResponseDTO> getAllPaginated(Status status, String position, Pageable pageable);
+  Page<BannerResponseDTO> getAllPaginated(Status status, Integer position, Pageable pageable);
 
   void delete(Long id);
 
-  List<BannerResponseDTO> getActiveBannersByPosition(String position);
+  List<BannerResponseDTO> getActiveBannersByPosition(Integer position);
 }

@@ -22,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/banners")
+@RequestMapping("${api.admin.version}/banners")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Banner Management", description = "Các API quản lý banner cho admin")
 public class BannerAdminController {
@@ -76,7 +76,9 @@ public class BannerAdminController {
           @RequestParam(defaultValue = "false")
           boolean isAll,
       @Parameter(description = "Trạng thái banner") @RequestParam(required = false) Status status,
-      @Parameter(description = "Vị trí banner") @RequestParam(required = false) String position,
+      @Parameter(description = "Vị trí banner (0: top, 1: right, 2: bottom, 3: left)")
+          @RequestParam(required = false)
+          Integer position,
       @Parameter(description = "Số trang") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Trường sắp xếp") @RequestParam(defaultValue = "displayOrder")

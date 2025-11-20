@@ -84,14 +84,14 @@ public class BannerServiceImpl implements BannerService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<BannerResponseDTO> getAll(Status status, String position) {
+  public List<BannerResponseDTO> getAll(Status status, Integer position) {
     log.info("Lấy danh sách banner với status: {}, position: {}", status, position);
 
     List<Banner> banners;
-    if (position != null && !position.trim().isEmpty()) {
-      banners = repository.findAllWithFiltersList(status, position, true);
+    if (position != null) {
+      banners = repository.findAllWithFiltersList(status, position);
     } else {
-      banners = repository.findByStatusAndIsActiveTrueOrderByDisplayOrderAsc(status);
+      banners = repository.findByStatusOrderByDisplayOrderAsc(status);
     }
 
     return banners.stream().map(mapper::toDto).collect(Collectors.toList());
@@ -100,10 +100,10 @@ public class BannerServiceImpl implements BannerService {
   @Override
   @Transactional(readOnly = true)
   public Page<BannerResponseDTO> getAllPaginated(
-      Status status, String position, Pageable pageable) {
+      Status status, Integer position, Pageable pageable) {
     log.info("Lấy danh sách banner phân trang với status: {}, position: {}", status, position);
 
-    Page<Banner> bannersPage = repository.findAllWithFilters(status, position, true, pageable);
+    Page<Banner> bannersPage = repository.findAllWithFilters(status, position, pageable);
     return bannersPage.map(mapper::toDto);
   }
 
@@ -117,7 +117,6 @@ public class BannerServiceImpl implements BannerService {
             .orElseThrow(() -> new ResourceNotFoundException("Banner", "id", id));
 
     entity.setStatus(Status.DELETED);
-    entity.setIsActive(false);
     entity.setUpdatedAt(LocalDateTime.now());
 
     repository.save(entity);
@@ -126,12 +125,11 @@ public class BannerServiceImpl implements BannerService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<BannerResponseDTO> getActiveBannersByPosition(String position) {
+  public List<BannerResponseDTO> getActiveBannersByPosition(Integer position) {
     log.info("Lấy danh sách banner hoạt động theo vị trí: {}", position);
 
     List<Banner> banners =
-        repository.findByPositionAndStatusAndIsActiveTrueOrderByDisplayOrderAsc(
-            position, Status.ACTIVE);
+        repository.findByPositionAndStatusOrderByDisplayOrderAsc(position, Status.ACTIVE);
 
     return banners.stream().map(mapper::toDto).collect(Collectors.toList());
   }

@@ -30,14 +30,11 @@ public class BannerResponseDTO {
   @Schema(description = "URL hình ảnh")
   private String imageUrl;
 
-  @Schema(description = "Vị trí hiển thị")
-  private String position;
+  @Schema(description = "Vị trí hiển thị (0: top, 1: right, 2: bottom, 3: left)")
+  private Integer position;
 
   @Schema(description = "Thứ tự hiển thị")
   private Integer displayOrder;
-
-  @Schema(description = "Trạng thái hoạt động")
-  private Boolean isActive;
 
   @Schema(description = "Thời gian tạo")
   private LocalDateTime createdAt;
