@@ -129,15 +129,21 @@ public class BannerServiceImpl implements BannerService {
     log.info("Lấy danh sách banner hoạt động theo vị trí: {}", position);
 
     // Query all active banners first, then filter by position in Java
-    // This is necessary because position is stored as JSON and JPA queries don't work well with JSON columns
+    // This is necessary because position is stored as JSON and JPA queries don't work well with
+    // JSON columns
     List<Banner> allActiveBanners = repository.findByStatusOrderByDisplayOrderAsc(Status.ACTIVE);
-    
-    List<Banner> banners = allActiveBanners.stream()
-        .filter(banner -> banner.getPosition() != null && banner.getPosition().equals(position))
-        .collect(Collectors.toList());
 
-    log.info("Tìm thấy {} banners với position = {} và status = {} (từ tổng số {} banners ACTIVE)", 
-        banners.size(), position, Status.ACTIVE.getValue(), allActiveBanners.size());
+    List<Banner> banners =
+        allActiveBanners.stream()
+            .filter(banner -> banner.getPosition() != null && banner.getPosition().equals(position))
+            .collect(Collectors.toList());
+
+    log.info(
+        "Tìm thấy {} banners với position = {} và status = {} (từ tổng số {} banners ACTIVE)",
+        banners.size(),
+        position,
+        Status.ACTIVE.getValue(),
+        allActiveBanners.size());
 
     return banners.stream().map(mapper::toDto).collect(Collectors.toList());
   }

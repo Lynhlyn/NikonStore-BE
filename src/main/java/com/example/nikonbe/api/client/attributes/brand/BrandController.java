@@ -22,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/brands")
+@RequestMapping("${api.version}/brands")
 @RequiredArgsConstructor
 @Tag(name = "Client - Brand API", description = "Các API thương hiệu dành cho người dùng")
 public class BrandController {

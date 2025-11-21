@@ -39,4 +39,3 @@ public class PositionConverter implements AttributeConverter<Integer, String> {
     }
   }
 }
-

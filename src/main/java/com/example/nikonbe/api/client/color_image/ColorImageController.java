@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/client/v1/color-images")
+@RequestMapping("${api.version}/color-images")
 @RequiredArgsConstructor
 @Tag(name = "Client - Color Image")
 public class ColorImageController {

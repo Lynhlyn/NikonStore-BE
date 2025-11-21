@@ -69,4 +69,38 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
           + "LEFT JOIN FETCH p.material "
           + "WHERE p.id = :id")
   Optional<Product> findByIdWithRelationships(@Param("id") Integer id);
+
+  @Query(
+      value =
+          "SELECT DISTINCT p FROM Product p "
+              + "LEFT JOIN FETCH p.brand "
+              + "LEFT JOIN FETCH p.category "
+              + "LEFT JOIN FETCH p.material "
+              + "LEFT JOIN FETCH p.strapType "
+              + "WHERE "
+              + "(:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+              + "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+              + "(:brandIds IS NULL OR p.brand.id IN :brandIds) AND "
+              + "(:strapTypeIds IS NULL OR p.strapType.id IN :strapTypeIds) AND "
+              + "(:materialIds IS NULL OR p.material.id IN :materialIds) AND "
+              + "(:categoryIds IS NULL OR p.category.id IN :categoryIds) AND "
+              + "p.status = :status",
+      countQuery =
+          "SELECT COUNT(DISTINCT p) FROM Product p "
+              + "WHERE "
+              + "(:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+              + "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+              + "(:brandIds IS NULL OR p.brand.id IN :brandIds) AND "
+              + "(:strapTypeIds IS NULL OR p.strapType.id IN :strapTypeIds) AND "
+              + "(:materialIds IS NULL OR p.material.id IN :materialIds) AND "
+              + "(:categoryIds IS NULL OR p.category.id IN :categoryIds) AND "
+              + "p.status = :status")
+  Page<Product> findByAdvancedFilters(
+      @Param("keyword") String keyword,
+      @Param("brandIds") List<Integer> brandIds,
+      @Param("strapTypeIds") List<Integer> strapTypeIds,
+      @Param("materialIds") List<Integer> materialIds,
+      @Param("categoryIds") List<Integer> categoryIds,
+      @Param("status") Status status,
+      Pageable pageable);
 }

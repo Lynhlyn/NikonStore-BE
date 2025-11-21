@@ -87,4 +87,18 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, In
           + "WHERE pd.sku = :sku AND pd.status = :status "
           + "ORDER BY pd.id DESC")
   List<ProductDetail> findBySkuAndStatus(@Param("sku") String sku, @Param("status") Status status);
+
+  @Query("SELECT pd FROM ProductDetail pd WHERE pd.product.id = :productId AND pd.status = :status")
+  List<ProductDetail> findByProductIdAndStatus(
+      @Param("productId") Integer productId, @Param("status") Status status);
+
+  @Query(
+      "SELECT MIN(pd.price) FROM ProductDetail pd WHERE pd.product.id = :productId AND pd.status = :status AND pd.stock > 0")
+  BigDecimal findMinPriceByProductIdAndStatus(
+      @Param("productId") Integer productId, @Param("status") Status status);
+
+  @Query(
+      "SELECT MAX(pd.price) FROM ProductDetail pd WHERE pd.product.id = :productId AND pd.status = :status AND pd.stock > 0")
+  BigDecimal findMaxPriceByProductIdAndStatus(
+      @Param("productId") Integer productId, @Param("status") Status status);
 }
