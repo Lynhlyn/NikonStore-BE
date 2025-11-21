@@ -2,7 +2,9 @@ package com.example.nikonbe.common.enums;
 
 public enum EmailAction {
   REGISTER_SUCCESS("register_success", "Đăng ký thành công"),
+  CLIENT_FORGOT_PASSWORD("client_forgot_password", "Quên mật khẩu khách hàng"),
   FORGOT_PASSWORD("forgot_password", "Quên mật khẩu"),
+  ADMIN_FORGOT_PASSWORD("admin_forgot_password", "Quên mật khẩu admin"),
   RESET_PASSWORD("reset_password", "Đặt lại mật khẩu"),
   PASSWORD_RESET("password_reset", "Đặt lại mật khẩu"),
   PASSWORD_CHANGED("password_changed", "Mật khẩu đã được thay đổi"),

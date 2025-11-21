@@ -12,13 +12,19 @@ import com.example.nikonbe.modules.customer.dto.request.CustomerFilterDTO;
 import com.example.nikonbe.modules.customer.dto.request.CustomerUpdateDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
 import com.example.nikonbe.modules.customer.entity.Customer;
+import com.example.nikonbe.modules.customer.entity.CustomerToken;
 import com.example.nikonbe.modules.customer.mapper.CustomerMapper;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
+import com.example.nikonbe.modules.customer.repository.CustomerTokenRepository;
 import com.example.nikonbe.modules.customer.service.interF.CustomerService;
 import com.example.nikonbe.modules.shipping_address.mapper.ShippingAddressMapper;
+import com.example.nikonbe.security.service.mail.EmailService;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,10 +41,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class CustomerServiceImpl implements CustomerService {
 
   private final CustomerRepository customerRepository;
+  private final CustomerTokenRepository customerTokenRepository;
   private final CustomerMapper customerMapper;
   private final PasswordEncoder passwordEncoder;
   private final ImageUploadService imageUploadService;
   private final ShippingAddressMapper shippingAddressMapper;
+  private final EmailService emailService;
 
   @Override
   @Transactional
@@ -52,6 +60,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     Customer savedCustomer = customerRepository.save(customer);
     log.info("Created customer with ID: {}", savedCustomer.getId());
+
+    emailService.sendRegisterSuccessEmail(savedCustomer.getEmail(), savedCustomer.getFullName());
 
     return customerMapper.toDto(savedCustomer);
   }
@@ -508,5 +518,87 @@ public class CustomerServiceImpl implements CustomerService {
     if (!errors.isEmpty()) {
       throw new ValidationException("Password change validation failed", errors);
     }
+  }
+
+  @Override
+  @Transactional
+  public void verifyEmail(String token) {
+    if (token == null || token.trim().isEmpty()) {
+      throw new ValidationException("Token không được để trống");
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    CustomerToken customerToken =
+        customerTokenRepository
+            .findValidVerificationToken(token.trim(), now)
+            .orElseThrow(
+                () ->
+                    new ValidationException(
+                        "Token xác thực email không hợp lệ hoặc đã hết hạn"));
+
+    Customer customer =
+        customerRepository
+            .findById(customerToken.getCustomer().getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
+
+    if (customer.getStatus() != Status.ACTIVE) {
+      throw new ValidationException("Tài khoản không hoạt động");
+    }
+
+    customerTokenRepository.clearVerificationToken(customer.getId());
+    log.info("Email verified for customer ID: {}", customer.getId());
+  }
+
+  @Override
+  @Transactional
+  public void resendVerificationEmail(String email) {
+    if (email == null || email.trim().isEmpty()) {
+      throw new ValidationException("Email không được để trống");
+    }
+
+    String normalizedEmail = email.trim();
+    Customer customer =
+        customerRepository
+            .findByEmail(normalizedEmail)
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Không tìm thấy khách hàng với email: " + normalizedEmail));
+
+    if (customer.getStatus() != Status.ACTIVE) {
+      throw new ValidationException("Tài khoản khách hàng không hoạt động");
+    }
+
+    String verificationToken = generateSecureToken();
+    LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
+    LocalDateTime now = LocalDateTime.now();
+
+    Optional<CustomerToken> tokenOpt = customerTokenRepository.findByCustomerId(customer.getId());
+    if (tokenOpt.isPresent()) {
+      customerTokenRepository.updateVerificationToken(
+          customer.getId(), verificationToken, expiresAt, now);
+    } else {
+      CustomerToken token =
+          CustomerToken.builder()
+              .customer(customer)
+              .accessToken(generateSecureToken())
+              .refreshToken(generateSecureToken())
+              .tokenVerification(verificationToken)
+              .expiresAt(expiresAt)
+              .build();
+      customerTokenRepository.save(token);
+    }
+
+    try {
+      emailService.sendVerifyEmail(customer.getEmail(), customer.getFullName(), verificationToken);
+    } catch (Exception e) {
+      log.error("Failed to send verification email for {}", normalizedEmail, e);
+      throw new ValidationException("Không thể gửi email xác thực");
+    }
+  }
+
+  private String generateSecureToken() {
+    return UUID.randomUUID().toString().replace("-", "")
+        + Long.toHexString(System.currentTimeMillis());
   }
 }

@@ -19,6 +19,8 @@ public interface CustomerTokenRepository extends JpaRepository<CustomerToken, In
 
   Optional<CustomerToken> findByTokenReset(String token);
 
+  Optional<CustomerToken> findByTokenVerification(String token);
+
   @Transactional
   @Modifying
   @Query("delete from CustomerToken c where c.customer.id = ?1")
@@ -30,6 +32,14 @@ public interface CustomerTokenRepository extends JpaRepository<CustomerToken, In
           + "ct.expiresAt > :currentTime")
   Optional<CustomerToken> findValidResetToken(
       @Param("tokenReset") String tokenReset, @Param("currentTime") LocalDateTime currentTime);
+
+  @Query(
+      "SELECT ct FROM CustomerToken ct WHERE "
+          + "ct.tokenVerification = :tokenVerification AND "
+          + "ct.expiresAt > :currentTime")
+  Optional<CustomerToken> findValidVerificationToken(
+      @Param("tokenVerification") String tokenVerification,
+      @Param("currentTime") LocalDateTime currentTime);
 
   @Modifying
   @Query(
@@ -51,4 +61,22 @@ public interface CustomerTokenRepository extends JpaRepository<CustomerToken, In
   @Modifying
   @Query("UPDATE CustomerToken ct SET ct.tokenReset = NULL WHERE ct.expiresAt < :currentTime")
   void clearExpiredResetTokens(@Param("currentTime") LocalDateTime currentTime);
+
+  @Modifying
+  @Query(
+      "UPDATE CustomerToken ct SET "
+          + "ct.tokenVerification = :tokenVerification,"
+          + "ct.expiresAt = :expiresAt,"
+          + "ct.updatedAt = :updatedAt "
+          + "WHERE ct.customer.id = :customerId")
+  void updateVerificationToken(
+      @Param("customerId") Integer customerId,
+      @Param("tokenVerification") String tokenVerification,
+      @Param("expiresAt") LocalDateTime expiresAt,
+      @Param("updatedAt") LocalDateTime updatedAt);
+
+  @Modifying
+  @Query(
+      "UPDATE CustomerToken ct SET ct.tokenVerification = NULL WHERE ct.customer.id = :customerId")
+  void clearVerificationToken(@Param("customerId") Integer customerId);
 }

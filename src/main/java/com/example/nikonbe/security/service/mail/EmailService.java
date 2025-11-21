@@ -2,6 +2,7 @@ package com.example.nikonbe.security.service.mail;
 
 import com.example.nikonbe.common.enums.EmailAction;
 import com.example.nikonbe.common.enums.UserRole;
+import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
 import com.example.nikonbe.modules.email.template.service.interF.TemplateEmailService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -214,10 +215,140 @@ public class EmailService {
       templateData.put("role", role != null ? role.name() : "");
       templateData.put("frontendAdminUrl", frontendAdminUrl);
 
-      templateEmailService.sendTemplateEmail(EmailAction.RESET_PASSWORD, email, templateData);
+      sendTemplateEmailWithFallback(
+          email, templateData, EmailAction.ADMIN_FORGOT_PASSWORD, EmailAction.RESET_PASSWORD);
 
     } catch (Exception e) {
       throw new RuntimeException("Không thể gửi email đặt lại mật khẩu admin", e);
+    }
+  }
+
+  @Async
+  public void sendRegisterSuccessEmail(String email, String fullName) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("name", fullName);
+      templateData.put("fullName", fullName);
+      templateData.put("frontendUrl", frontendUrl);
+
+      templateEmailService.sendTemplateEmail(EmailAction.REGISTER_SUCCESS, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email chào mừng", e);
+    }
+  }
+
+  @Async
+  public void sendForgotPasswordEmail(String email, String fullName, String resetToken) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("name", fullName);
+      templateData.put("fullName", fullName);
+      templateData.put("resetToken", resetToken);
+      templateData.put("frontendUrl", frontendUrl);
+
+      sendTemplateEmailWithFallback(
+          email, templateData, EmailAction.CLIENT_FORGOT_PASSWORD, EmailAction.FORGOT_PASSWORD);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email quên mật khẩu", e);
+    }
+  }
+
+  @Async
+  public void sendPasswordChangedEmail(String email, String fullName) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("name", fullName);
+      templateData.put("fullName", fullName);
+      templateData.put("frontendUrl", frontendUrl);
+
+      templateEmailService.sendTemplateEmail(EmailAction.PASSWORD_CHANGED, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email thông báo đổi mật khẩu", e);
+    }
+  }
+
+  @Async
+  public void sendVerifyEmail(String email, String fullName, String verificationToken) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("name", fullName);
+      templateData.put("fullName", fullName);
+      templateData.put("verificationToken", verificationToken);
+      templateData.put("frontendUrl", frontendUrl);
+
+      templateEmailService.sendTemplateEmail(EmailAction.VERIFY_EMAIL, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email xác thực email", e);
+    }
+  }
+
+  @Async
+  public void sendWelcomeEmail(String email, String fullName) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("name", fullName);
+      templateData.put("fullName", fullName);
+      templateData.put("frontendUrl", frontendUrl);
+
+      templateEmailService.sendTemplateEmail(EmailAction.WELCOME, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email chào mừng", e);
+    }
+  }
+
+  @Async
+  public void sendAccountLockedEmail(String email, String fullName, String reason) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("fullName", fullName);
+      templateData.put("email", email);
+      templateData.put("reason", reason);
+
+      templateEmailService.sendTemplateEmail(EmailAction.ACCOUNT_LOCKED, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email thông báo khóa tài khoản", e);
+    }
+  }
+
+  @Async
+  public void sendAccountUnlockedEmail(String email, String fullName) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("fullName", fullName);
+      templateData.put("email", email);
+
+      templateEmailService.sendTemplateEmail(EmailAction.ACCOUNT_UNLOCKED, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email thông báo mở khoá tài khoản", e);
+    }
+  }
+
+  private void sendTemplateEmailWithFallback(
+      String email,
+      Map<String, Object> templateData,
+      EmailAction primary,
+      EmailAction... fallback) {
+    try {
+      templateEmailService.sendTemplateEmail(primary, email, templateData);
+    } catch (ResourceNotFoundException notFound) {
+      if (fallback == null || fallback.length == 0) {
+        throw notFound;
+      }
+      for (EmailAction candidate : fallback) {
+        try {
+          templateEmailService.sendTemplateEmail(candidate, email, templateData);
+          return;
+        } catch (ResourceNotFoundException ignored) {
+        }
+      }
+      throw notFound;
     }
   }
 }

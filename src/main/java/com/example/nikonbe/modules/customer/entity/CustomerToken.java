@@ -44,6 +44,11 @@ public class CustomerToken extends BaseEntity {
   @Column(name = "token_reset", length = 50)
   private String tokenReset;
 
+  /** mã xác thực email */
+  @Size(max = 50)
+  @Column(name = "token_verification", length = 50)
+  private String tokenVerification;
+
   /** Thời gian hiết hạn. */
   @NotNull
   @Column(name = "expires_at", nullable = false)

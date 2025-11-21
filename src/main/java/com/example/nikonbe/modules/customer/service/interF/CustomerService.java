@@ -53,4 +53,8 @@ public interface CustomerService {
   void changePassword(Integer customerId, ChangePasswordDTO dto);
 
   void delete(Integer id, String reason);
+
+  void verifyEmail(String token);
+
+  void resendVerificationEmail(String email);
 }
