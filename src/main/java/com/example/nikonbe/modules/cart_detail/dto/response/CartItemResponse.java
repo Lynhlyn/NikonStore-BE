@@ -17,10 +17,14 @@ public class CartItemResponse {
   private String sku;
   private String color;
   private String capacity;
+  private String dimensions;
+  private String strap_type;
+  private String compartment;
   private String imageUrl;
   private Integer quantity;
   private BigDecimal price;
   private BigDecimal discount;
   private BigDecimal totalPrice;
+  private BigDecimal weight;
   private Integer stock;
 }
