@@ -660,11 +660,20 @@ public class PosServiceImpl implements PosService {
       voucherDiscount = calculateVoucherDiscount(subtotal, order.getVoucher());
     }
 
+    // Tính giá gốc ban đầu (trước khi áp dụng bất kỳ discount nào)
+    BigDecimal originalTotal = subtotal.add(productDiscount);
+    
+    // Tính total discount (productDiscount + voucherDiscount)
     BigDecimal totalDiscount = productDiscount.add(voucherDiscount);
+    
+    // Giới hạn totalDiscount không vượt quá giá gốc ban đầu
+    BigDecimal cappedTotalDiscount = totalDiscount.min(originalTotal);
+    
+    // Tính totalAmount sau khi trừ voucherDiscount
     BigDecimal totalAmount = subtotal.subtract(voucherDiscount);
 
-    order.setTotalAmount(totalAmount.max(BigDecimal.ZERO));
-    order.setDiscount(totalDiscount);
+    order.setTotalAmount(totalAmount.max(BigDecimal.ZERO)); // Đảm bảo không âm
+    order.setDiscount(cappedTotalDiscount); // Sử dụng capped discount
 
     log.debug(
         "Recalculated order amounts - Subtotal: {}, ProductDiscount: {}, VoucherDiscount: {}, TotalAmount: {}",

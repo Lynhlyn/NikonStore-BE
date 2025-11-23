@@ -163,6 +163,11 @@ public interface OrderMapper {
         order.getDiscount() != null ? order.getDiscount() : java.math.BigDecimal.ZERO;
     java.math.BigDecimal shippingFee =
         order.getShippingFee() != null ? order.getShippingFee() : java.math.BigDecimal.ZERO;
-    return total.subtract(discount).add(shippingFee);
+    // Cap discount to not exceed totalAmount to prevent negative final amount
+    java.math.BigDecimal cappedDiscount = discount.compareTo(total) > 0 ? total : discount;
+    java.math.BigDecimal finalAmount = total.subtract(cappedDiscount).add(shippingFee);
+    return finalAmount.compareTo(java.math.BigDecimal.ZERO) < 0 
+        ? java.math.BigDecimal.ZERO 
+        : finalAmount;
   }
 }
