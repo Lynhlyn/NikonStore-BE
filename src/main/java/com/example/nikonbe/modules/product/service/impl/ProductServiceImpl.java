@@ -71,6 +71,7 @@ public class ProductServiceImpl implements ProductService {
   private final CapacityMapper capacityMapper;
   private final PromotionMapper promotionMapper;
   private final PromotionService promotionService;
+  private final com.example.nikonbe.modules.review.service.interF.ReviewService reviewService;
 
   private ProductResponseDTO enrichWithRelationships(ProductResponseDTO dto) {
     List<com.example.nikonbe.modules.color_image.entity.ColorImage> colorImages =
@@ -291,6 +292,9 @@ public class ProductServiceImpl implements ProductService {
         promotionService.getPromotionsForProduct(productId.toString());
     BigDecimal minPriceDiscount = minPrice != null ? minPrice : BigDecimal.ZERO;
 
+    com.example.nikonbe.modules.review.dto.response.ProductReviewSummaryDTO reviewSummary =
+        reviewService.getProductReviewSummary(productId);
+
     return ProductDetailFullResponseDTO.builder()
         .productId(product.getId())
         .name(product.getName())
@@ -312,6 +316,7 @@ public class ProductServiceImpl implements ProductService {
         .maxPrice(maxPrice != null ? maxPrice : BigDecimal.ZERO)
         .minPriceDiscount(minPriceDiscount)
         .availablePromotions(availablePromotions)
+        .reviewSummary(reviewSummary)
         .build();
   }
 
@@ -362,6 +367,9 @@ public class ProductServiceImpl implements ProductService {
 
     BigDecimal bestDiscountPrice = primaryVariant.getFinalPrice();
 
+    com.example.nikonbe.modules.review.dto.response.ProductReviewSummaryDTO reviewSummary =
+        reviewService.getProductReviewSummary(product.getId());
+
     return ProductListingResponseDTO.builder()
         .productId(product.getId())
         .productName(product.getName())
@@ -387,6 +395,7 @@ public class ProductServiceImpl implements ProductService {
         .bestPromotionValue(primaryVariant.getPromotionValue())
         .variants(variantDTOs)
         .primaryVariant(primaryVariant)
+        .reviewSummary(reviewSummary)
         .build();
   }
 

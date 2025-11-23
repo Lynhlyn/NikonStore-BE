@@ -5,6 +5,7 @@ import com.example.nikonbe.modules.attributes.category.dto.response.CategoryResp
 import com.example.nikonbe.modules.attributes.material.dto.response.MaterialResponseDTO;
 import com.example.nikonbe.modules.attributes.strape_type.dto.response.StrapTypeResponseDTO;
 import com.example.nikonbe.modules.product_detail.dto.response.ProductDetailListingResponseDTO;
+import com.example.nikonbe.modules.review.dto.response.ProductReviewSummaryDTO;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -42,4 +43,5 @@ public class ProductListingResponseDTO {
 
   private List<ProductDetailListingResponseDTO> variants;
   private ProductDetailListingResponseDTO primaryVariant;
+  private ProductReviewSummaryDTO reviewSummary;
 }

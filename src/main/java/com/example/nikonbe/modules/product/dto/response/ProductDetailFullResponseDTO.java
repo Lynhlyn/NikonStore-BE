@@ -6,6 +6,7 @@ import com.example.nikonbe.modules.attributes.material.dto.response.MaterialResp
 import com.example.nikonbe.modules.attributes.strape_type.dto.response.StrapTypeResponseDTO;
 import com.example.nikonbe.modules.product_detail.dto.response.ProductDetailWithImageResponseDTO;
 import com.example.nikonbe.modules.promotion.dto.response.PromotionResponseDTO;
+import com.example.nikonbe.modules.review.dto.response.ProductReviewSummaryDTO;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -35,4 +36,5 @@ public class ProductDetailFullResponseDTO {
   private BigDecimal maxPrice;
   private BigDecimal minPriceDiscount;
   private List<PromotionResponseDTO> availablePromotions;
+  private ProductReviewSummaryDTO reviewSummary;
 }
