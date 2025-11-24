@@ -11,6 +11,9 @@ import com.example.nikonbe.modules.orders.dto.response.OrderResponse;
 import com.example.nikonbe.modules.orders.dto.response.OrderStatusResponse;
 import com.example.nikonbe.modules.orders.entity.Order;
 import com.example.nikonbe.modules.orders.service.interF.OrderService;
+import com.example.nikonbe.security.dto.request.ShippingFeeRequestDTO;
+import com.example.nikonbe.security.dto.response.ShippingFeeResponseDTO;
+import com.example.nikonbe.security.service.ghnconfig.GHNClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,6 +32,8 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
   @Autowired private OrderService orderService;
+
+  private final GHNClient ghnClient;
 
   @PostMapping()
   @Operation(
@@ -191,5 +196,29 @@ public class OrderController {
             .build();
 
     return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/shipping-fee")
+  @Operation(
+      summary = "Tính phí vận chuyển GHN",
+      description = "Tính phí vận chuyển dựa trên địa chỉ và kiện hàng")
+  public ResponseEntity<ApiResponseDto<ShippingFeeResponseDTO>> calculateShippingFee(
+      @RequestBody ShippingFeeRequestDTO request) {
+    ShippingFeeResponseDTO feeResponse = ghnClient.calculateShippingFee(request);
+    ApiResponseDto<ShippingFeeResponseDTO> response =
+        ApiResponseDto.<ShippingFeeResponseDTO>builder()
+            .status(
+                feeResponse.getError() == null
+                    ? HttpStatus.OK.value()
+                    : HttpStatus.BAD_REQUEST.value())
+            .message(
+                feeResponse.getError() == null
+                    ? "Shipping fee calculated successfully"
+                    : feeResponse.getError())
+            .data(feeResponse)
+            .build();
+    return ResponseEntity.status(
+            feeResponse.getError() == null ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+        .body(response);
   }
 }
