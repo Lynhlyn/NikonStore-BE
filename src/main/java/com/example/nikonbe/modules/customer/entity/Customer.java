@@ -76,4 +76,9 @@ public class Customer extends BaseEntity {
   @Convert(converter = StatusConverter.class)
   @Column(name = "status", nullable = false)
   private Status status;
+
+  /** Thông tin cá nhân: Địa chỉ giao hàng (nếu có) */
+  @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private java.util.List<com.example.nikonbe.modules.shipping_address.entity.ShippingAddress>
+      shippingAddresses;
 }

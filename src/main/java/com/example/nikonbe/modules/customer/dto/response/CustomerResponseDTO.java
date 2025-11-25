@@ -54,4 +54,9 @@ public class CustomerResponseDTO {
 
   @Schema(description = "Last update timestamp", example = "2024-01-01T10:00:00")
   private LocalDateTime updatedAt;
+
+  @Schema(description = "List of shipping addresses", required = false)
+  private java.util.List<
+          com.example.nikonbe.modules.shipping_address.dto.response.ShippingAddressResponseDto>
+      shippingAddresses;
 }

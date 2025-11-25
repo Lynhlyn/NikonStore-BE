@@ -17,12 +17,14 @@ public interface CustomerMapper {
   @Mapping(target = "provider", ignore = true)
   @Mapping(target = "providerId", ignore = true)
   @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "stringToLocalDate")
+  @Mapping(target = "shippingAddresses", ignore = true)
   Customer toEntity(CustomerCreateDTO dto);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "password", ignore = true)
   @Mapping(target = "provider", ignore = true)
   @Mapping(target = "providerId", ignore = true)
+  @Mapping(target = "shippingAddresses", ignore = true)
   Customer toEntity(CreateCustomerDTO dto);
 
   @Mapping(target = "id", ignore = true)
@@ -30,9 +32,11 @@ public interface CustomerMapper {
   @Mapping(target = "provider", ignore = true)
   @Mapping(target = "providerId", ignore = true)
   @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "stringToLocalDate")
+  @Mapping(target = "shippingAddresses", ignore = true)
   void updateEntityFromDto(CustomerUpdateDTO dto, @MappingTarget Customer entity);
 
   @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "localDateToString")
+  @Mapping(target = "shippingAddresses", ignore = true)
   CustomerResponseDTO toDto(Customer entity);
 
   List<CustomerResponseDTO> toDtoList(List<Customer> entities);

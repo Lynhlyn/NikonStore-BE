@@ -15,6 +15,7 @@ import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.mapper.CustomerMapper;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
 import com.example.nikonbe.modules.customer.service.interF.CustomerService;
+import com.example.nikonbe.modules.shipping_address.mapper.ShippingAddressMapper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class CustomerServiceImpl implements CustomerService {
   private final CustomerMapper customerMapper;
   private final PasswordEncoder passwordEncoder;
   private final ImageUploadService imageUploadService;
+  private final ShippingAddressMapper shippingAddressMapper;
 
   @Override
   @Transactional
@@ -145,7 +147,16 @@ public class CustomerServiceImpl implements CustomerService {
   @Transactional(readOnly = true)
   public CustomerResponseDTO getById(Integer id) {
     Customer customer = findCustomerById(id);
-    return customerMapper.toDto(customer);
+    // Fetch shipping addresses to avoid lazy loading issues
+    if (customer.getShippingAddresses() != null) {
+      customer.getShippingAddresses().size(); // Force fetch
+    }
+    CustomerResponseDTO dto = customerMapper.toDto(customer);
+    // Map shipping addresses manually
+    if (customer.getShippingAddresses() != null && !customer.getShippingAddresses().isEmpty()) {
+      dto.setShippingAddresses(shippingAddressMapper.toDtoList(customer.getShippingAddresses()));
+    }
+    return dto;
   }
 
   @Override
@@ -174,7 +185,16 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     log.info("Successfully retrieved current customer info for customer ID: {}", customer.getId());
-    return customerMapper.toDto(customer);
+    // Fetch shipping addresses to avoid lazy loading issues
+    if (customer.getShippingAddresses() != null) {
+      customer.getShippingAddresses().size(); // Force fetch
+    }
+    CustomerResponseDTO dto = customerMapper.toDto(customer);
+    // Map shipping addresses manually
+    if (customer.getShippingAddresses() != null && !customer.getShippingAddresses().isEmpty()) {
+      dto.setShippingAddresses(shippingAddressMapper.toDtoList(customer.getShippingAddresses()));
+    }
+    return dto;
   }
 
   @Override
