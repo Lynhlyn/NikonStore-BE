@@ -5,12 +5,10 @@ public class AuthConstants {
 
   // Token expiration times
   // Đặt MODE_TEST_REFRESH=true để dùng REFRESH_TOKEN_VALIDITY_MINUTES_TEST thay vì DAYS
-  public static final boolean MODE_TEST_REFRESH = true; // TEST FLAG
-  public static final long ACCESS_TOKEN_VALIDITY_MINUTES = 1; // JWT Access Token: 1 phút (TEST)
-  public static final long REFRESH_TOKEN_VALIDITY_DAYS =
-      30; // Giá trị chuẩn (bỏ qua khi test flag = true)
-  // TEST CONFIG: Rút ngắn thời gian để kiểm thử tự động refresh token
-  public static final long REFRESH_TOKEN_VALIDITY_MINUTES_TEST = 30; // Refresh Token test: 30 phút
+  public static final boolean MODE_TEST_REFRESH = false;
+  public static final long ACCESS_TOKEN_VALIDITY_MINUTES = 30;
+  public static final long REFRESH_TOKEN_VALIDITY_DAYS = 30;
+  public static final long REFRESH_TOKEN_VALIDITY_MINUTES_TEST = 30;
   public static final long RESET_TOKEN_VALIDITY_MINUTES = 15; // Password Reset Token: 15 phút
 
   // Validation constants
