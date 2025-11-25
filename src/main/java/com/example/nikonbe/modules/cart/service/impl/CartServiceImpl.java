@@ -19,6 +19,8 @@ import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
 import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
 import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
+import com.example.nikonbe.modules.promotion.entity.Promotion;
+import com.example.nikonbe.modules.promotion.service.interF.PromotionService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ public class CartServiceImpl implements CartService {
   private final CartMapper cartMapper;
   private final ProductDetailRepository productDetailRepository;
   private final CartDetailRepository cartDetailRepository;
+  private final PromotionService promotionService;
 
   private static final long COOKIE_EXPIRY_DAYS = 5;
 
@@ -64,6 +67,31 @@ public class CartServiceImpl implements CartService {
       throw new ValidationException("Không đủ hàng trong kho", errors);
     }
     return productDetail;
+  }
+
+  /**
+   * Tính discount cho sản phẩm dựa trên promotion
+   *
+   * @param productDetail ProductDetail cần tính discount
+   * @return BigDecimal Số tiền giảm giá
+   */
+  public BigDecimal calculateDiscount(ProductDetail productDetail) {
+    if (productDetail == null) {
+      return BigDecimal.ZERO;
+    }
+
+    BigDecimal originalPrice = productDetail.getPrice();
+
+    // Chỉ áp dụng promotion khi product detail có promotion được gán trực tiếp
+    Promotion directPromotion = productDetail.getPromotion();
+    if (directPromotion != null) {
+      BigDecimal finalPrice =
+          promotionService.calculateDiscountedPrice(originalPrice, directPromotion);
+      return originalPrice.subtract(finalPrice);
+    }
+
+    // Không có promotion trực tiếp = không có discount
+    return BigDecimal.ZERO;
   }
 
   public Cart getOrCreateCart(GetCartRequest request) {
@@ -121,10 +149,19 @@ public class CartServiceImpl implements CartService {
             .map(
                 cartDetail -> {
                   CartItemResponse itemResponse = cartDetailMapper.toCartItemResponse(cartDetail);
-                  itemResponse.setDiscount(BigDecimal.ZERO);
-                  BigDecimal unitPrice = cartDetail.getPrice();
+                  // Lấy giá gốc từ ProductDetail
+                  BigDecimal originalPrice = cartDetail.getProductDetail().getPrice();
+                  // Tính discount (số tiền giảm)
+                  BigDecimal discount = calculateDiscount(cartDetail.getProductDetail());
+                  // Set giá gốc vào price
+                  itemResponse.setPrice(originalPrice);
+                  // Set discount (số tiền giảm)
+                  itemResponse.setDiscount(discount);
+                  // Tính giá sau giảm = giá gốc - discount
+                  BigDecimal discountedPrice = originalPrice.subtract(discount);
+                  // TotalPrice = giá sau giảm * quantity
                   itemResponse.setTotalPrice(
-                      unitPrice.multiply(BigDecimal.valueOf(cartDetail.getQuantity())));
+                      discountedPrice.multiply(BigDecimal.valueOf(cartDetail.getQuantity())));
                   return itemResponse;
                 })
             .collect(Collectors.toList());
@@ -180,7 +217,8 @@ public class CartServiceImpl implements CartService {
       }
       cartDetail.setQuantity(newQuantity);
       ProductDetail pdRef = productDetailRepository.getReferenceById(request.getProductId());
-      cartDetail.setPrice(pdRef.getPrice());
+      BigDecimal finalPrice = pdRef.getPrice().subtract(calculateDiscount(pdRef));
+      cartDetail.setPrice(finalPrice);
       cartDetailRepository.save(cartDetail);
     } else {
       CartDetail cartDetail = new CartDetail();
@@ -189,7 +227,8 @@ public class CartServiceImpl implements CartService {
       cartDetail.setProductDetail(pdRef);
       cartDetail.setQuantity(request.getQuantity());
 
-      cartDetail.setPrice(pdRef.getPrice());
+      BigDecimal finalPrice = pdRef.getPrice().subtract(calculateDiscount(pdRef));
+      cartDetail.setPrice(finalPrice);
       cart.getCartDetails().add(cartDetail);
       cartDetailRepository.save(cartDetail);
     }
@@ -201,10 +240,19 @@ public class CartServiceImpl implements CartService {
             .map(
                 cartDetail -> {
                   CartItemResponse itemResponse = cartDetailMapper.toCartItemResponse(cartDetail);
-                  itemResponse.setDiscount(BigDecimal.ZERO);
-                  BigDecimal unitPrice = cartDetail.getPrice();
+                  // Lấy giá gốc từ ProductDetail
+                  BigDecimal originalPrice = cartDetail.getProductDetail().getPrice();
+                  // Tính discount (số tiền giảm)
+                  BigDecimal discount = calculateDiscount(cartDetail.getProductDetail());
+                  // Set giá gốc vào price
+                  itemResponse.setPrice(originalPrice);
+                  // Set discount (số tiền giảm)
+                  itemResponse.setDiscount(discount);
+                  // Tính giá sau giảm = giá gốc - discount
+                  BigDecimal discountedPrice = originalPrice.subtract(discount);
+                  // TotalPrice = giá sau giảm * quantity
                   itemResponse.setTotalPrice(
-                      unitPrice.multiply(BigDecimal.valueOf(cartDetail.getQuantity())));
+                      discountedPrice.multiply(BigDecimal.valueOf(cartDetail.getQuantity())));
                   return itemResponse;
                 })
             .collect(Collectors.toList());
@@ -248,7 +296,8 @@ public class CartServiceImpl implements CartService {
                 () -> new ResourceNotFoundException("Sản phẩm không tồn tại trong giỏ hàng"));
 
     cartDetail.setQuantity(request.getQuantity());
-    cartDetail.setPrice(prd.getPrice());
+    BigDecimal finalPrice = prd.getPrice().subtract(calculateDiscount(prd));
+    cartDetail.setPrice(finalPrice);
     cartDetailRepository.save(cartDetail);
 
     cart = cartRepository.save(cart);
@@ -258,10 +307,19 @@ public class CartServiceImpl implements CartService {
             .map(
                 detail -> {
                   CartItemResponse itemResponse = cartDetailMapper.toCartItemResponse(detail);
-                  itemResponse.setDiscount(BigDecimal.ZERO);
-                  BigDecimal unitPrice = detail.getPrice();
+                  // Lấy giá gốc từ ProductDetail
+                  BigDecimal originalPrice = detail.getProductDetail().getPrice();
+                  // Tính discount (số tiền giảm)
+                  BigDecimal discount = calculateDiscount(detail.getProductDetail());
+                  // Set giá gốc vào price
+                  itemResponse.setPrice(originalPrice);
+                  // Set discount (số tiền giảm)
+                  itemResponse.setDiscount(discount);
+                  // Tính giá sau giảm = giá gốc - discount
+                  BigDecimal discountedPrice = originalPrice.subtract(discount);
+                  // TotalPrice = giá sau giảm * quantity
                   itemResponse.setTotalPrice(
-                      unitPrice.multiply(BigDecimal.valueOf(detail.getQuantity())));
+                      discountedPrice.multiply(BigDecimal.valueOf(detail.getQuantity())));
                   return itemResponse;
                 })
             .collect(Collectors.toList());
@@ -308,10 +366,19 @@ public class CartServiceImpl implements CartService {
             .map(
                 cartDetail1 -> {
                   CartItemResponse itemResponse = cartDetailMapper.toCartItemResponse(cartDetail1);
-                  itemResponse.setDiscount(BigDecimal.ZERO);
-                  BigDecimal unitPrice = cartDetail1.getPrice();
+                  // Lấy giá gốc từ ProductDetail
+                  BigDecimal originalPrice = cartDetail1.getProductDetail().getPrice();
+                  // Tính discount (số tiền giảm)
+                  BigDecimal discount = calculateDiscount(cartDetail1.getProductDetail());
+                  // Set giá gốc vào price
+                  itemResponse.setPrice(originalPrice);
+                  // Set discount (số tiền giảm)
+                  itemResponse.setDiscount(discount);
+                  // Tính giá sau giảm = giá gốc - discount
+                  BigDecimal discountedPrice = originalPrice.subtract(discount);
+                  // TotalPrice = giá sau giảm * quantity
                   itemResponse.setTotalPrice(
-                      unitPrice.multiply(BigDecimal.valueOf(cartDetail1.getQuantity())));
+                      discountedPrice.multiply(BigDecimal.valueOf(cartDetail1.getQuantity())));
                   return itemResponse;
                 })
             .collect(Collectors.toList());
@@ -368,10 +435,19 @@ public class CartServiceImpl implements CartService {
             .map(
                 cartDetail -> {
                   CartItemResponse itemResponse = cartDetailMapper.toCartItemResponse(cartDetail);
-                  itemResponse.setDiscount(BigDecimal.ZERO);
-                  BigDecimal unitPrice = cartDetail.getPrice();
+                  // Lấy giá gốc từ ProductDetail
+                  BigDecimal originalPrice = cartDetail.getProductDetail().getPrice();
+                  // Tính discount (số tiền giảm)
+                  BigDecimal discount = calculateDiscount(cartDetail.getProductDetail());
+                  // Set giá gốc vào price
+                  itemResponse.setPrice(originalPrice);
+                  // Set discount (số tiền giảm)
+                  itemResponse.setDiscount(discount);
+                  // Tính giá sau giảm = giá gốc - discount
+                  BigDecimal discountedPrice = originalPrice.subtract(discount);
+                  // TotalPrice = giá sau giảm * quantity
                   itemResponse.setTotalPrice(
-                      unitPrice.multiply(BigDecimal.valueOf(cartDetail.getQuantity())));
+                      discountedPrice.multiply(BigDecimal.valueOf(cartDetail.getQuantity())));
                   return itemResponse;
                 })
             .collect(Collectors.toList());
@@ -419,7 +495,8 @@ public class CartServiceImpl implements CartService {
             .findById(productId)
             .orElseThrow(() -> new ValidationException("Sản phẩm không tồn tại", new HashMap<>()));
 
-    return productDetail.getPrice();
+    BigDecimal discount = calculateDiscount(productDetail);
+    return productDetail.getPrice().subtract(discount);
   }
 
   @Transactional

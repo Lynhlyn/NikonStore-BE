@@ -16,6 +16,7 @@ public class CartItemResponse {
   private String productName;
   private String sku;
   private String color;
+  private String colorHex;
   private String capacity;
   private String dimensions;
   private String strap_type;

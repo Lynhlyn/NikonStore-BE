@@ -22,6 +22,7 @@ public abstract class CartDetailMapper {
   @Mapping(target = "productName", source = "productDetail.product.name")
   @Mapping(target = "sku", source = "productDetail.sku")
   @Mapping(target = "color", source = "productDetail.color.name")
+  @Mapping(target = "colorHex", source = "productDetail.color.hexCode")
   @Mapping(target = "capacity", source = "productDetail.capacity.name")
   @Mapping(target = "imageUrl", source = "productDetail", qualifiedByName = "mapImageUrl")
   @Mapping(target = "quantity", source = "quantity")

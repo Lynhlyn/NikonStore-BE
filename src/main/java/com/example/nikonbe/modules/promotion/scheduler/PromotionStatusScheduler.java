@@ -11,6 +11,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Scheduler tự động cập nhật trạng thái của các promotion dựa trên thời gian Chạy mỗi 10 giây để đảm
+ * bảo trạng thái promotion được cập nhật kịp thời và tránh lạm dụng promotion quá hạn
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -18,7 +22,12 @@ public class PromotionStatusScheduler {
 
   private final PromotionRepository promotionRepository;
 
-  @Scheduled(fixedRate = 60000)
+  /**
+   * Automatically updates promotion status every 10 seconds. Update logic: - Promotion chưa bắt đầu
+   * (startDate > now) -> PENDING_START - Promotion đã hết hạn (endDate < now) -> INACTIVE -
+   * Promotion trong thời gian hiệu lực và status không phải DELETED -> ACTIVE
+   */
+  @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây
   @Transactional
   public void updatePromotionStatus() {
     log.debug("Starting scheduled promotion status update");
@@ -27,10 +36,13 @@ public class PromotionStatusScheduler {
       LocalDateTime now = LocalDateTime.now();
       int updatedCount = 0;
 
+      // 1. Cập nhật promotion chưa đến thời gian bắt đầu thành PENDING_START
       updatedCount += updatePendingPromotions(now);
 
+      // 2. Cập nhật promotion đã hết hạn thành INACTIVE
       updatedCount += updateExpiredPromotions(now);
 
+      // 3. Kích hoạt lại promotion đang trong thời gian sử dụng
       updatedCount += activateAvailablePromotions(now);
 
       if (updatedCount > 0) {
@@ -44,6 +56,7 @@ public class PromotionStatusScheduler {
     }
   }
 
+  /** Cập nhật promotion chưa đến thời gian bắt đầu thành PENDING_START */
   private int updatePendingPromotions(LocalDateTime now) {
     List<Promotion> pendingPromotions =
         promotionRepository.findAll().stream()
@@ -64,6 +77,7 @@ public class PromotionStatusScheduler {
     return 0;
   }
 
+  /** Cập nhật promotion đã hết hạn thành INACTIVE */
   private int updateExpiredPromotions(LocalDateTime now) {
     List<Promotion> expiredPromotions =
         promotionRepository.findAll().stream()
@@ -85,17 +99,21 @@ public class PromotionStatusScheduler {
     return 0;
   }
 
+  /** Kích hoạt lại promotion từ PENDING_START thành ACTIVE khi đến thời gian */
   private int activateAvailablePromotions(LocalDateTime now) {
     List<Promotion> availablePromotions =
         promotionRepository.findAll().stream()
             .filter(
                 p -> {
+                  // CHỈ xử lý promotion có status PENDING_START (không cho phép từ INACTIVE)
                   if (p.getStatus() != Status.PENDING_START) {
                     return false;
                   }
 
+                  // Kiểm tra đã đến thời gian bắt đầu
                   boolean hasStarted = !p.getStartDate().isAfter(now);
 
+                  // Kiểm tra chưa hết hạn
                   boolean notExpired = !p.getEndDate().isBefore(now);
 
                   return hasStarted && notExpired;
@@ -105,6 +123,7 @@ public class PromotionStatusScheduler {
     if (!availablePromotions.isEmpty()) {
       availablePromotions.forEach(
           promotion -> {
+            // Chỉ chuyển từ PENDING_START thành ACTIVE
             promotion.setStatus(Status.ACTIVE);
             log.debug(
                 "Promotion {} đã đến thời gian sử dụng, kích hoạt thành ACTIVE",
@@ -116,14 +135,22 @@ public class PromotionStatusScheduler {
     return 0;
   }
 
-  @Scheduled(initialDelay = 10000, fixedRate = Long.MAX_VALUE)
+  /**
+   * Chạy ngay lập tức để cập nhật trạng thái promotion khi ứng dụng khởi động Hữu ích khi server
+   * restart và cần sync lại trạng thái
+   */
+  @Scheduled(initialDelay = 10000, fixedRate = Long.MAX_VALUE) // Chạy 1 lần sau 10s khởi động
   @Transactional
   public void initialPromotionStatusUpdate() {
     log.info("Running initial promotion status update on application startup");
     updatePromotionStatus();
   }
 
-  @Scheduled(fixedRate = 3600000)
+  /**
+   * Scheduler kiểm tra và log thống kê promotion (chạy mỗi giờ) Giúp monitor tình trạng promotion
+   * trong hệ thống
+   */
+  @Scheduled(fixedRate = 3600000) // Chạy mỗi 1 giờ
   @Transactional(readOnly = true)
   public void logPromotionStatistics() {
     try {
