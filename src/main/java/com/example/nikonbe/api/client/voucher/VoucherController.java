@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/client/vouchers")
+@RequestMapping("${api.version}/vouchers")
 @RequiredArgsConstructor
 @Tag(name = "Client - Voucher", description = "Các API voucher dành cho client")
 public class VoucherController {

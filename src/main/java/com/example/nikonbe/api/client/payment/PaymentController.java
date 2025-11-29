@@ -2,16 +2,20 @@ package com.example.nikonbe.api.client.payment;
 
 import com.example.nikonbe.modules.orders.entity.Order;
 import com.example.nikonbe.modules.orders.repository.OrderRepository;
+import com.example.nikonbe.modules.orders.service.interF.OrderService;
 import com.example.nikonbe.modules.pos.service.interF.PosService;
+import com.example.nikonbe.modules.vnpay.service.interF.VNPayService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +31,8 @@ public class PaymentController {
 
   private final PosService posService;
   private final OrderRepository orderRepository;
+  private final OrderService orderService;
+  private final VNPayService vnPayService;
 
   @Value("${api.frontendAdmin.url:http://localhost:3001}")
   private String frontendAdminUrl;
@@ -143,6 +149,48 @@ public class PaymentController {
       return org.springframework.http.ResponseEntity.ok()
           .contentType(MediaType.TEXT_HTML)
           .body(htmlContent);
+    }
+  }
+
+  @PostMapping("/retry")
+  @Operation(
+      summary = "Tạo lại link thanh toán VNPay",
+      description = "API tạo lại link thanh toán cho đơn hàng đang chờ thanh toán")
+  public ResponseEntity<?> retryPayment(
+      @RequestParam String trackingNumber,
+      @RequestParam(required = false) String frontendOrigin,
+      HttpServletRequest request) {
+    try {
+      Order order = orderService.getOrderByTrackingNumber(trackingNumber);
+      if (order == null) {
+        return ResponseEntity.badRequest().body("Không tìm thấy đơn hàng");
+      }
+
+      boolean isVnpay =
+          order.getPaymentMethod() != null && order.getPaymentMethod().equalsIgnoreCase("VNPAY");
+      boolean isPending =
+          order.getStatus() != null && order.getStatus().name().equals("PENDING_PAYMENT");
+      boolean inTime =
+          order.getCreatedAt() != null
+              && order.getCreatedAt().plusMinutes(30).isAfter(java.time.LocalDateTime.now());
+      
+      if (!isVnpay || !isPending || !inTime) {
+        return ResponseEntity.badRequest().body("Không thể thanh toán lại cho đơn này");
+      }
+
+      BigDecimal discount = order.getDiscount() != null ? order.getDiscount() : BigDecimal.ZERO;
+      BigDecimal finalAmountBd =
+          order.getTotalAmount().subtract(discount).add(order.getShippingFee());
+      Long finalAmount = finalAmountBd.longValue();
+      String ipAddr = request.getRemoteAddr();
+      String orderIdStr = order.getId().toString();
+      String paymentUrl =
+          vnPayService.createPaymentUrl(finalAmount, order.getTrackingNumber(), ipAddr, orderIdStr);
+
+      return ResponseEntity.ok(paymentUrl);
+    } catch (Exception e) {
+      log.error("Error retrying payment: {}", e.getMessage(), e);
+      return ResponseEntity.badRequest().body("Có lỗi xảy ra khi tạo lại link thanh toán");
     }
   }
 }
