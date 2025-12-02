@@ -52,7 +52,7 @@ public class StaffPasswordService {
     UserRole emailRole;
     if (role != null && !role.trim().isEmpty()) {
       try {
-        emailRole = UserRole.valueOf(role.trim());
+        emailRole = UserRole.valueOf(role.trim().toUpperCase());
         log.info("Using role from request: {}", emailRole);
       } catch (IllegalArgumentException e) {
         log.warn(

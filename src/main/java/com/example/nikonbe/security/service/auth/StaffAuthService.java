@@ -83,7 +83,7 @@ public class StaffAuthService {
 
       UserRole requestedRole;
       try {
-        requestedRole = UserRole.valueOf(request.getRole());
+        requestedRole = UserRole.valueOf(request.getRole().trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new ValidationException("Vai trò không hợp lệ");
       }
