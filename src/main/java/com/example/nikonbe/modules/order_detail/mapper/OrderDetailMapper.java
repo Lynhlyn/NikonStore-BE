@@ -17,6 +17,7 @@ public abstract class OrderDetailMapper {
   @Autowired ColorImageRepository colorImageRepository;
 
   @Mapping(target = "orderDetailId", source = "id")
+  @Mapping(target = "productId", source = "productDetail.product.id")
   @Mapping(target = "sku", source = "productDetail.sku")
   @Mapping(target = "productName", source = "productDetail.product.name")
   @Mapping(target = "brandName", source = "productDetail.product.brand.name")

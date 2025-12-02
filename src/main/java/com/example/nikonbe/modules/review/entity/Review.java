@@ -45,6 +45,14 @@ public class Review extends BaseEntity {
   private OrderDetail orderDetail;
 
   @NotNull
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
+      name = "product_detail_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_review_product_detail"))
+  private com.example.nikonbe.modules.product_detail.entity.ProductDetail productDetail;
+
+  @NotNull
   @Min(1)
   @Max(5)
   @Column(nullable = false)

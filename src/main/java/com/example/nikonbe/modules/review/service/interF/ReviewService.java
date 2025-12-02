@@ -24,4 +24,6 @@ public interface ReviewService {
   ProductReviewSummaryDTO getProductReviewSummary(Integer productId);
 
   ReviewResponseDTO updateStatus(Integer id, Integer status);
+
+  java.util.List<ReviewResponseDTO> getByOrderId(Integer orderId);
 }

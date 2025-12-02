@@ -60,7 +60,7 @@ public interface ReviewMapper {
                     .id(img.getId())
                     .imageUrl(img.getImageUrl())
                     .createdAt(img.getCreatedAt())
-                    .updatedAt(img.getUpdatedAt())
+                    .updatedAt(img.getCreatedAt())
                     .build())
         .collect(Collectors.toList());
   }

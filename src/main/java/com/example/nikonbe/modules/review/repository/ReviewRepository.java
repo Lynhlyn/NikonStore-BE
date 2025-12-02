@@ -1,6 +1,8 @@
 package com.example.nikonbe.modules.review.repository;
 
 import com.example.nikonbe.modules.review.entity.Review;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +42,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
       "SELECT r FROM Review r "
           + "LEFT JOIN FETCH r.customer "
           + "LEFT JOIN FETCH r.product "
-          + "LEFT JOIN FETCH r.reviewImages "
           + "WHERE r.id = :id")
   Optional<Review> findByIdWithRelations(@Param("id") Integer id);
 
@@ -52,4 +53,12 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
   boolean existsByProductIdAndCustomerIdAndOrderDetailId(
       Integer productId, Integer customerId, Integer orderDetailId);
+
+  @Query(
+      "SELECT r FROM Review r "
+          + "LEFT JOIN FETCH r.customer "
+          + "LEFT JOIN FETCH r.product "
+          + "WHERE r.orderDetail.order.id = :orderId "
+          + "ORDER BY r.createdAt DESC")
+  List<Review> findByOrderIdWithRelations(@Param("orderId") Integer orderId);
 }

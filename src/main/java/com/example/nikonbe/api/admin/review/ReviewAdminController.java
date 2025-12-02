@@ -87,4 +87,14 @@ public class ReviewAdminController {
     reviewService.delete(id, null);
     return ResponseUtils.success(null, "Xóa đánh giá thành công");
   }
+
+  @GetMapping("/order/{orderId}")
+  @Operation(
+      summary = "Lấy danh sách đánh giá theo đơn hàng",
+      description = "Lấy tất cả đánh giá của các sản phẩm trong một đơn hàng")
+  public ResponseEntity<ApiResponseDto<java.util.List<ReviewResponseDTO>>> getByOrderId(
+      @Parameter(description = "ID đơn hàng") @PathVariable Integer orderId) {
+    java.util.List<ReviewResponseDTO> result = reviewService.getByOrderId(orderId);
+    return ResponseUtils.success(result, "Lấy danh sách đánh giá thành công");
+  }
 }

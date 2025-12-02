@@ -1,10 +1,11 @@
 package com.example.nikonbe.modules.review.entity;
 
-import com.example.nikonbe.common.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Getter
 @Setter
@@ -13,7 +14,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewImage extends BaseEntity {
+public class ReviewImage {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,4 +31,8 @@ public class ReviewImage extends BaseEntity {
   @NotBlank
   @Column(name = "image_url", nullable = false, length = 500)
   private String imageUrl;
+
+  @CreationTimestamp
+  @Column(name = "created_at", updatable = false)
+  private LocalDateTime createdAt;
 }

@@ -5,6 +5,8 @@ import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
 import com.example.nikonbe.common.exceptions.UnauthorizedException;
 import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
+import com.example.nikonbe.modules.order_detail.entity.OrderDetail;
+import com.example.nikonbe.modules.order_detail.repository.OrderDetailRepository;
 import com.example.nikonbe.modules.product.repository.ProductRepository;
 import com.example.nikonbe.modules.review.dto.request.ReviewCreateDTO;
 import com.example.nikonbe.modules.review.dto.request.ReviewUpdateDTO;
@@ -38,6 +40,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final ReviewMapper reviewMapper;
   private final ProductRepository productRepository;
   private final CustomerRepository customerRepository;
+  private final OrderDetailRepository orderDetailRepository;
 
   @Override
   public ReviewResponseDTO create(ReviewCreateDTO dto, Integer customerId) {
@@ -50,7 +53,13 @@ public class ReviewServiceImpl implements ReviewService {
             .findById(customerId)
             .orElseThrow(() -> new ResourceNotFoundException("Khách hàng không tồn tại"));
 
+    OrderDetail orderDetail = null;
     if (dto.getOrderDetailId() != null) {
+      orderDetail =
+          orderDetailRepository
+              .findById(dto.getOrderDetailId())
+              .orElseThrow(() -> new ResourceNotFoundException("Chi tiết đơn hàng không tồn tại"));
+      
       boolean exists =
           reviewRepository.existsByProductIdAndCustomerIdAndOrderDetailId(
               dto.getProductId(), customerId, dto.getOrderDetailId());
@@ -61,6 +70,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     Review review = reviewMapper.toEntity(dto);
     review.setCustomer(customer);
+    
+    if (orderDetail != null && orderDetail.getProductDetail() != null) {
+      review.setProductDetail(orderDetail.getProductDetail());
+    } else {
+      throw new BadRequestException("Không thể xác định chi tiết sản phẩm từ đơn hàng");
+    }
 
     Review savedReview = reviewRepository.save(review);
 
@@ -78,10 +93,15 @@ public class ReviewServiceImpl implements ReviewService {
       reviewImageRepository.saveAll(reviewImages);
     }
 
-    return reviewMapper.toDto(
+    Review reviewWithRelations =
         reviewRepository
             .findByIdWithRelations(savedReview.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá")));
+            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+    
+    reviewWithRelations.setReviewImages(
+        reviewImageRepository.findByReviewId(reviewWithRelations.getId()));
+    
+    return reviewMapper.toDto(reviewWithRelations);
   }
 
   @Override
@@ -212,5 +232,17 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository
             .findByIdWithRelations(updatedReview.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá")));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ReviewResponseDTO> getByOrderId(Integer orderId) {
+    List<Review> reviews = reviewRepository.findByOrderIdWithRelations(orderId);
+    return reviews.stream()
+        .map(review -> {
+          review.setReviewImages(reviewImageRepository.findByReviewId(review.getId()));
+          return reviewMapper.toDto(review);
+        })
+        .collect(Collectors.toList());
   }
 }
