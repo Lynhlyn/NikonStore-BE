@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,16 @@ import org.springframework.web.bind.annotation.*;
 public class PageController {
 
   private final PageService pageService;
+
+  @GetMapping
+  @Operation(
+      summary = "Lấy danh sách tất cả pages",
+      description = "Lấy danh sách tất cả các trang có sẵn cho client")
+  @ApiResponse(responseCode = "200", description = "Lấy danh sách pages thành công")
+  public ResponseEntity<ApiResponseDto<List<PageDto>>> getAllPages() {
+    List<PageDto> result = pageService.getAllForClient();
+    return ResponseUtils.success(result, "Lấy danh sách pages thành công");
+  }
 
   @GetMapping("/{slug}")
   @Operation(

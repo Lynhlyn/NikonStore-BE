@@ -10,6 +10,7 @@ import com.example.nikonbe.modules.page.entity.Page;
 import com.example.nikonbe.modules.page.mapper.PageMapper;
 import com.example.nikonbe.modules.page.repository.PageRepository;
 import com.example.nikonbe.modules.page.service.interF.PageService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -78,6 +79,13 @@ public class PageServiceImpl implements PageService {
   @Transactional(readOnly = true)
   public PageDto getBySlugForClient(String slug) {
     return pageRepository.findBySlug(slug).map(pageMapper::toClientDto).orElse(new PageDto());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<PageDto> getAllForClient() {
+    List<Page> pages = pageRepository.findAll();
+    return pages.stream().map(pageMapper::toClientDto).toList();
   }
 
   private String normalizeSlug(String slug) {
