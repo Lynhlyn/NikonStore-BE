@@ -7,11 +7,13 @@ import com.example.nikonbe.modules.comment.dto.response.CommentResponseDTO;
 import com.example.nikonbe.modules.comment.entity.Comment;
 import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.mapper.CustomerMapper;
+import com.example.nikonbe.modules.staff.entity.Staff;
+import com.example.nikonbe.modules.staff.mapper.StaffMapper;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = {CustomerMapper.class})
+@Mapper(componentModel = "spring", uses = {CustomerMapper.class, StaffMapper.class})
 public interface CommentMapper {
 
   @Mapping(target = "id", ignore = true)
@@ -25,9 +27,10 @@ public interface CommentMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "blog", expression = "java(fromBlogId(dto.getBlogId()))")
   @Mapping(target = "customer", expression = "java(fromCustomerId(dto.getCustomerId()))")
+  @Mapping(target = "staff", ignore = true)
   @Mapping(target = "parent", expression = "java(fromParentId(dto.getParentId()))")
   @Mapping(target = "replies", ignore = true)
-  @Mapping(target = "status", constant = "false")
+  @Mapping(target = "status", ignore = true)
   Comment toEntityFromReply(CommentReplyDTO dto);
 
   @Mapping(target = "blogId", source = "blog.id")
@@ -58,6 +61,13 @@ public interface CommentMapper {
     Comment parent = new Comment();
     parent.setId(id);
     return parent;
+  }
+
+  default Staff fromStaffId(Integer id) {
+    if (id == null) return null;
+    Staff staff = new Staff();
+    staff.setId(id);
+    return staff;
   }
 
   default List<CommentResponseDTO> mapReplies(List<Comment> replies) {

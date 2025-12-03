@@ -10,12 +10,16 @@ import com.example.nikonbe.modules.comment.mapper.CommentMapper;
 import com.example.nikonbe.modules.comment.repository.CommentRepository;
 import com.example.nikonbe.modules.comment.service.interF.CommentService;
 import com.example.nikonbe.modules.customer.repository.CustomerRepository;
+import com.example.nikonbe.modules.staff.entity.Staff;
+import com.example.nikonbe.modules.staff.repository.StaffRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +33,7 @@ public class CommentServiceImpl implements CommentService {
   private final CommentMapper commentMapper;
   private final BlogRepository blogRepository;
   private final CustomerRepository customerRepository;
+  private final StaffRepository staffRepository;
 
   @Override
   public CommentResponseDTO create(CommentCreateDTO dto) {
@@ -58,7 +63,7 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public CommentResponseDTO reply(CommentReplyDTO dto) {
+  public CommentResponseDTO reply(CommentReplyDTO dto, Authentication authentication) {
     blogRepository
         .findById(dto.getBlogId())
         .orElseThrow(() -> new ResourceNotFoundException("Blog không tồn tại"));
@@ -67,17 +72,47 @@ public class CommentServiceImpl implements CommentService {
         .findById(dto.getParentId())
         .orElseThrow(() -> new ResourceNotFoundException("Comment cha không tồn tại"));
 
-    if (dto.getCustomerId() != null && dto.getCustomerId() != 1) {
-      customerRepository
-          .findById(dto.getCustomerId())
-          .orElseThrow(() -> new ResourceNotFoundException("Khách hàng không tồn tại"));
-    }
-
-    if (dto.getCustomerId() == null) {
-      dto.setCustomerId(1);
-    }
-
     Comment reply = commentMapper.toEntityFromReply(dto);
+
+    if (authentication != null && authentication.isAuthenticated()) {
+      try {
+        String login = authentication.getName();
+        Optional<Staff> staffOpt = staffRepository.findByUsername(login);
+        if (staffOpt.isEmpty()) {
+          staffOpt = staffRepository.findByEmail(login);
+        }
+        
+        if (staffOpt.isPresent()) {
+          Staff currentStaff = staffOpt.get();
+          reply.setStaff(currentStaff);
+          reply.setStatus(true);
+          if (dto.getUserComment() == null || dto.getUserComment().isEmpty()) {
+            reply.setUserComment("Chăm sóc khách hàng");
+          } else {
+            reply.setUserComment(dto.getUserComment());
+          }
+        }
+      } catch (Exception e) {
+        log.warn("Không thể lấy thông tin staff: {}", e.getMessage());
+      }
+    } else {
+      if (dto.getUserComment() != null) {
+        reply.setUserComment(dto.getUserComment());
+      }
+    }
+
+    if (reply.getStaff() == null) {
+      if (dto.getCustomerId() != null && dto.getCustomerId() != 1) {
+        customerRepository
+            .findById(dto.getCustomerId())
+            .orElseThrow(() -> new ResourceNotFoundException("Khách hàng không tồn tại"));
+      }
+
+      if (dto.getCustomerId() == null) {
+        dto.setCustomerId(1);
+      }
+    }
+
     Comment savedReply = commentRepository.save(reply);
 
     Comment replyWithRelations =

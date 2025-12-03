@@ -26,6 +26,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
   @Query(
       "SELECT c FROM Comment c "
           + "LEFT JOIN FETCH c.customer "
+          + "LEFT JOIN FETCH c.staff "
           + "LEFT JOIN FETCH c.blog "
           + "LEFT JOIN FETCH c.parent "
           + "WHERE c.id = :id")
@@ -34,6 +35,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
   @Query(
       "SELECT c FROM Comment c "
           + "LEFT JOIN FETCH c.customer "
+          + "LEFT JOIN FETCH c.staff "
           + "LEFT JOIN FETCH c.blog "
           + "LEFT JOIN FETCH c.parent "
           + "WHERE c.blog.id = :blogId AND c.parent IS NULL "
@@ -43,6 +45,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
   @Query(
       "SELECT c FROM Comment c "
           + "LEFT JOIN FETCH c.customer "
+          + "LEFT JOIN FETCH c.staff "
           + "LEFT JOIN FETCH c.blog "
           + "LEFT JOIN FETCH c.parent "
           + "WHERE c.blog.id = :blogId AND c.parent IS NULL AND c.status = :status "
@@ -53,6 +56,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
   @Query(
       "SELECT c FROM Comment c "
           + "LEFT JOIN FETCH c.customer "
+          + "LEFT JOIN FETCH c.staff "
           + "LEFT JOIN FETCH c.blog "
           + "LEFT JOIN FETCH c.parent "
           + "WHERE c.parent.id = :parentId "
@@ -62,6 +66,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
   @Query(
       "SELECT c FROM Comment c "
           + "LEFT JOIN FETCH c.customer "
+          + "LEFT JOIN FETCH c.staff "
           + "LEFT JOIN FETCH c.blog "
           + "LEFT JOIN FETCH c.parent "
           + "WHERE (:blogId IS NULL OR c.blog.id = :blogId) AND "

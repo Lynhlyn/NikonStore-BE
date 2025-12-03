@@ -37,6 +37,12 @@ public class Comment extends BaseEntity {
       foreignKey = @ForeignKey(name = "fk_comments_customer"))
   private Customer customer;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
+      name = "staff_id",
+      foreignKey = @ForeignKey(name = "fk_comments_staff"))
+  private com.example.nikonbe.modules.staff.entity.Staff staff;
+
   @Column(name = "user_comment")
   private String userComment;
 

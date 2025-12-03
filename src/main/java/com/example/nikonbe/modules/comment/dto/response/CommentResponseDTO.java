@@ -1,6 +1,7 @@
 package com.example.nikonbe.modules.comment.dto.response;
 
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
+import com.example.nikonbe.modules.staff.dto.response.StaffResponseDTO;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.*;
@@ -13,6 +14,7 @@ public class CommentResponseDTO {
   private Integer id;
   private Integer blogId;
   private CustomerResponseDTO customer;
+  private StaffResponseDTO staff;
   private String userComment;
   private String content;
   private Integer parentId;
