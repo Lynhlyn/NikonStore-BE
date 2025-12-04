@@ -11,4 +11,5 @@ public class LoginRequest {
 
   private String login; // email or username
   private String password;
+  private Boolean rememberMe;
 }

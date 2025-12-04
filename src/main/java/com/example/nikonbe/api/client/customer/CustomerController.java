@@ -191,7 +191,7 @@ public class CustomerController {
       @Parameter(description = "Customer ID") @PathVariable Integer id,
       @Valid @RequestBody ChangePasswordDTO dto) {
     customerService.changePassword(id, dto);
-    return ResponseUtils.success(null, "Password changed successfully");
+    return ResponseUtils.success(null, "Đổi mật khẩu thành công");
   }
 
   @PutMapping("/{id}/deactivate")

@@ -43,6 +43,17 @@ public class JWTUtil {
     return extractClaims(token, Claims::getSubject);
   }
 
+  public Integer extractUserId(String token) {
+    Claims claims = extractAllClaims(token);
+    Object idObj = claims.get("id");
+    if (idObj instanceof Integer) {
+      return (Integer) idObj;
+    } else if (idObj instanceof Number) {
+      return ((Number) idObj).intValue();
+    }
+    return null;
+  }
+
   private Date extractExpiration(String token) {
     return extractClaims(token, Claims::getExpiration);
   }

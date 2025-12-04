@@ -15,6 +15,8 @@ public interface CustomerTokenRepository extends JpaRepository<CustomerToken, In
 
   Optional<CustomerToken> findByRefreshToken(String refreshToken);
 
+  Optional<CustomerToken> findByAccessToken(String accessToken);
+
   Optional<CustomerToken> findByCustomerId(Integer customerId);
 
   Optional<CustomerToken> findByTokenReset(String token);
@@ -79,4 +81,35 @@ public interface CustomerTokenRepository extends JpaRepository<CustomerToken, In
   @Query(
       "UPDATE CustomerToken ct SET ct.tokenVerification = NULL WHERE ct.customer.id = :customerId")
   void clearVerificationToken(@Param("customerId") Integer customerId);
+
+  @Query(
+      "SELECT ct FROM CustomerToken ct WHERE ct.customer.id = :customerId AND ct.expiresAt > :currentTime")
+  java.util.List<CustomerToken> findAllByCustomerIdAndExpiresAtAfter(
+      @Param("customerId") Integer customerId, @Param("currentTime") LocalDateTime currentTime);
+
+  @Query(
+      "SELECT ct FROM CustomerToken ct WHERE ct.id = :tokenId AND ct.customer.id = :customerId")
+  Optional<CustomerToken> findByIdAndCustomerId(
+      @Param("tokenId") Integer tokenId, @Param("customerId") Integer customerId);
+
+  @Query(
+      "SELECT ct FROM CustomerToken ct WHERE "
+          + "ct.customer.id = :customerId AND "
+          + "ct.deviceName = :deviceName AND "
+          + "ct.browserName = :browserName AND "
+          + "ct.deviceType = :deviceType AND "
+          + "ct.ipAddress = :ipAddress")
+  Optional<CustomerToken> findByCustomerIdAndDeviceInfo(
+      @Param("customerId") Integer customerId,
+      @Param("deviceName") String deviceName,
+      @Param("browserName") String browserName,
+      @Param("deviceType") String deviceType,
+      @Param("ipAddress") String ipAddress);
+
+  @Transactional
+  @Modifying
+  @Query(
+      "DELETE FROM CustomerToken ct WHERE ct.id = :tokenId AND ct.customer.id = :customerId")
+  void deleteByIdAndCustomerId(
+      @Param("tokenId") Integer tokenId, @Param("customerId") Integer customerId);
 }

@@ -8,6 +8,7 @@ public class AuthConstants {
   public static final boolean MODE_TEST_REFRESH = false;
   public static final long ACCESS_TOKEN_VALIDITY_MINUTES = 30;
   public static final long REFRESH_TOKEN_VALIDITY_DAYS = 30;
+  public static final long REFRESH_TOKEN_VALIDITY_DAYS_WITHOUT_REMEMBER = 1;
   public static final long REFRESH_TOKEN_VALIDITY_MINUTES_TEST = 30;
   public static final long RESET_TOKEN_VALIDITY_MINUTES = 15; // Password Reset Token: 15 phút
 

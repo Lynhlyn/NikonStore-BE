@@ -45,4 +45,6 @@ public interface OrderService {
   void autoCancelUnpaidOrders();
 
   Order getOrderByTrackingNumber(String trackingNumber);
+
+  String getOrderEmailByTrackingNumber(String trackingNumber);
 }

@@ -2,6 +2,8 @@ package com.example.nikonbe.api.client.auth;
 
 import com.example.nikonbe.common.constants.AuthConstants;
 import com.example.nikonbe.common.response.ApiResponseDto;
+import com.example.nikonbe.common.utils.DeviceInfoUtil;
+import com.example.nikonbe.common.utils.JWTUtil;
 import com.example.nikonbe.common.utils.ResponseUtils;
 import com.example.nikonbe.modules.customer.dto.request.CustomerCreateDTO;
 import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
@@ -11,12 +13,14 @@ import com.example.nikonbe.security.dto.request.LoginRequest;
 import com.example.nikonbe.security.dto.request.ResendVerificationEmailRequest;
 import com.example.nikonbe.security.dto.request.ResetPasswordRequest;
 import com.example.nikonbe.security.dto.response.MessageResponse;
+import com.example.nikonbe.security.dto.response.SessionResponse;
 import com.example.nikonbe.security.dto.response.TokenResponse;
 import com.example.nikonbe.security.service.auth.CustomerAuthService;
 import com.example.nikonbe.security.service.auth.CustomerPasswordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.Map;
@@ -41,12 +45,16 @@ public class AuthController {
   private final CustomerAuthService customerAuthService;
   private final CustomerService customerService;
   private final CustomerPasswordService customerPasswordService;
+  private final JWTUtil jwtUtil;
 
   @PostMapping("/login")
   @Operation(summary = "Đăng nhập")
   @ApiResponse(responseCode = "200", description = "Đăng nhập thành công")
-  public ResponseEntity<?> loginCustomer(@RequestBody @Valid LoginRequest request) {
-    return customerAuthService.login(request);
+  public ResponseEntity<?> loginCustomer(
+      @RequestBody @Valid LoginRequest request, HttpServletRequest httpRequest) {
+    String userAgent = httpRequest.getHeader("User-Agent");
+    String ipAddress = DeviceInfoUtil.getClientIpAddress(httpRequest);
+    return customerAuthService.login(request, userAgent, ipAddress);
   }
 
   @PostMapping(value = "/signup")
@@ -122,4 +130,38 @@ public class AuthController {
     customerService.resendVerificationEmail(request.getEmail());
     return ResponseEntity.ok(new MessageResponse("Đã gửi lại email xác thực"));
   }
+
+  @PostMapping("/sessions")
+  @Operation(summary = "Lấy danh sách phiên đăng nhập đang hoạt động")
+  @ApiResponse(responseCode = "200", description = "Lấy danh sách sessions thành công")
+  public ResponseEntity<java.util.List<SessionResponse>> getSessions(
+      @RequestBody(required = false) Map<String, String> body,
+      HttpServletRequest request) {
+    Integer customerId = extractCustomerIdFromRequest(request);
+    String refreshToken = body != null ? body.get("refreshToken") : null;
+    java.util.List<SessionResponse> sessions =
+        customerAuthService.getActiveSessions(customerId, refreshToken);
+    return ResponseEntity.ok(sessions);
+  }
+
+  @org.springframework.web.bind.annotation.DeleteMapping("/sessions/{tokenId}")
+  @Operation(summary = "Xóa phiên đăng nhập")
+  @ApiResponse(responseCode = "200", description = "Xóa session thành công")
+  public ResponseEntity<MessageResponse> revokeSession(
+      @org.springframework.web.bind.annotation.PathVariable Integer tokenId,
+      HttpServletRequest httpRequest) {
+    Integer customerId = extractCustomerIdFromRequest(httpRequest);
+    customerAuthService.revokeSession(customerId, tokenId);
+    return ResponseEntity.ok(new MessageResponse("Xóa phiên đăng nhập thành công"));
+  }
+
+  private Integer extractCustomerIdFromRequest(HttpServletRequest request) {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+      String token = authHeader.substring(7);
+      return jwtUtil.extractUserId(token);
+    }
+    throw new com.example.nikonbe.common.exceptions.ValidationException("Token không hợp lệ");
+  }
+
 }

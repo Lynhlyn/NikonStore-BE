@@ -1,6 +1,7 @@
 package com.example.nikonbe.config.security;
 
 import com.example.nikonbe.common.utils.JWTUtil;
+import com.example.nikonbe.modules.customer.repository.CustomerTokenRepository;
 import com.example.nikonbe.security.service.provider.CustomerDetailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -9,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +29,7 @@ public class CustomerJWTAuthenticationFilter extends OncePerRequestFilter {
 
   private final JWTUtil jwtUtil;
   private final CustomerDetailService customerDetailService;
+  private final CustomerTokenRepository customerTokenRepository;
 
   @Override
   protected void doFilterInternal(
@@ -63,6 +66,18 @@ public class CustomerJWTAuthenticationFilter extends OncePerRequestFilter {
         && SecurityContextHolder.getContext().getAuthentication() == null) {
 
       try {
+        var tokenOpt = customerTokenRepository.findByAccessToken(jwt);
+        if (tokenOpt.isEmpty()) {
+          handleInvalidToken(response, "Token không tồn tại hoặc đã bị thu hồi");
+          return;
+        }
+
+        var customerToken = tokenOpt.get();
+        if (customerToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+          handleInvalidToken(response, "Token đã hết hạn");
+          return;
+        }
+
         UserDetails userDetails = customerDetailService.loadUserByUsername(userEmail);
         if (jwtUtil.isTokenValid(jwt, userDetails)) {
           SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -80,6 +95,8 @@ public class CustomerJWTAuthenticationFilter extends OncePerRequestFilter {
         return;
       } catch (Exception e) {
         log.warn("Error processing JWT token for customer: {}", e.getMessage());
+        handleInvalidToken(response, "Lỗi xác thực token");
+        return;
       }
     }
 
@@ -94,6 +111,16 @@ public class CustomerJWTAuthenticationFilter extends OncePerRequestFilter {
     var body =
         java.util.Map.of(
             "error", "TOKEN_EXPIRED", "message", "Access token đã hết hạn", "status", 401);
+    new ObjectMapper().writeValue(response.getWriter(), body);
+  }
+
+  private void handleInvalidToken(HttpServletResponse response, String message)
+      throws IOException {
+    log.debug("Customer JWT invalid: {}", message);
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setContentType("application/json;charset=UTF-8");
+    var body =
+        java.util.Map.of("error", "TOKEN_INVALID", "message", message, "status", 401);
     new ObjectMapper().writeValue(response.getWriter(), body);
   }
 }

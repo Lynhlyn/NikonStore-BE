@@ -336,6 +336,23 @@ public class EmailService {
     }
   }
 
+  @Async
+  public void sendAuthenticationCodeEmail(String email, String fullName, String code) {
+    try {
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("name", fullName);
+      templateData.put("fullName", fullName);
+      templateData.put("code", code);
+      templateData.put("authenticationCode", code);
+      templateData.put("frontendUrl", frontendUrl);
+
+      templateEmailService.sendTemplateEmail(EmailAction.AUTHENTICATION_CODE, email, templateData);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Không thể gửi email mã xác thực", e);
+    }
+  }
+
   private void sendTemplateEmailWithFallback(
       String email,
       Map<String, Object> templateData,

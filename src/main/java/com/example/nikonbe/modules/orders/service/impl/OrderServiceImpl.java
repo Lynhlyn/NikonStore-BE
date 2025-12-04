@@ -594,6 +594,13 @@ public class OrderServiceImpl implements OrderService {
     return orderRepository.findByTrackingNumber(trackingNumber).orElse(null);
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  public String getOrderEmailByTrackingNumber(String trackingNumber) {
+    Order order = orderRepository.findByTrackingNumber(trackingNumber).orElse(null);
+    return order != null ? order.getRecipientEmail() : null;
+  }
+
   private Customer validateAndGetCustomer(Integer customerId, String cookieId) {
     if (customerId != null) {
       return customerRepository
@@ -916,6 +923,21 @@ public class OrderServiceImpl implements OrderService {
               .add(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO);
 
       switch (status) {
+        case PENDING_CONFIRMATION:
+          emailService.sendOrderPendingConfirmationEmail(
+              order.getRecipientEmail(),
+              order.getRecipientName(),
+              order.getTrackingNumber(),
+              orderTotal);
+          break;
+        case PENDING_PAYMENT:
+          emailService.sendOrderPendingPaymentEmail(
+              order.getRecipientEmail(),
+              order.getRecipientName(),
+              order.getTrackingNumber(),
+              orderTotal,
+              "");
+          break;
         case CONFIRMED:
           emailService.sendOrderConfirmedEmail(
               order.getRecipientEmail(),

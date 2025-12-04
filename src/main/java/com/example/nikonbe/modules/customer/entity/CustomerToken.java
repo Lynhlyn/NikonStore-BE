@@ -49,6 +49,30 @@ public class CustomerToken extends BaseEntity {
   @Column(name = "token_verification", length = 50)
   private String tokenVerification;
 
+  /** Tên thiết bị */
+  @Size(max = 255)
+  @Column(name = "device_name")
+  private String deviceName;
+
+  /** Tên trình duyệt */
+  @Size(max = 100)
+  @Column(name = "browser_name")
+  private String browserName;
+
+  /** Loại thiết bị (Mobile, Desktop, Tablet) */
+  @Size(max = 50)
+  @Column(name = "device_type")
+  private String deviceType;
+
+  /** User Agent string */
+  @Column(name = "user_agent", columnDefinition = "TEXT")
+  private String userAgent;
+
+  /** Địa chỉ IP */
+  @Size(max = 45)
+  @Column(name = "ip_address")
+  private String ipAddress;
+
   /** Thời gian hiết hạn. */
   @NotNull
   @Column(name = "expires_at", nullable = false)

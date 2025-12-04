@@ -11,9 +11,15 @@ import com.example.nikonbe.modules.orders.dto.response.OrderResponse;
 import com.example.nikonbe.modules.orders.dto.response.OrderStatusResponse;
 import com.example.nikonbe.modules.orders.entity.Order;
 import com.example.nikonbe.modules.orders.service.interF.OrderService;
+import com.example.nikonbe.security.dto.request.OrderEmailVerificationRequest;
 import com.example.nikonbe.security.dto.request.ShippingFeeRequestDTO;
+import com.example.nikonbe.security.dto.request.VerifyOrderEmailRequest;
+import com.example.nikonbe.security.dto.response.ErrorResponse;
+import com.example.nikonbe.security.dto.response.MessageResponse;
 import com.example.nikonbe.security.dto.response.ShippingFeeResponseDTO;
+import com.example.nikonbe.security.dto.response.VerificationResult;
 import com.example.nikonbe.security.service.ghnconfig.GHNClient;
+import com.example.nikonbe.security.service.mail.OrderEmailVerificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,6 +40,8 @@ public class OrderController {
   @Autowired private OrderService orderService;
 
   private final GHNClient ghnClient;
+
+  private final OrderEmailVerificationService orderEmailVerificationService;
 
   @PostMapping()
   @Operation(
@@ -220,5 +228,79 @@ public class OrderController {
     return ResponseEntity.status(
             feeResponse.getError() == null ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
         .body(response);
+  }
+
+  @PostMapping("/send-verification-email")
+  @Operation(summary = "Gửi email xác thực cho khách hàng vãng lai")
+  public ResponseEntity<?> sendOrderVerificationEmail(
+      @RequestBody @Valid OrderEmailVerificationRequest request) {
+    try {
+      orderEmailVerificationService.sendOrderVerificationEmail(
+          request.getEmail(), request.getCustomerName());
+
+      return ResponseEntity.ok(new MessageResponse("Email xác thực đã được gửi thành công"));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("Không thể gửi email xác thực: " + e.getMessage()));
+    }
+  }
+
+  @PostMapping("/verify-order-email")
+  @Operation(summary = "Xác thực email cho khách hàng vãng lai")
+  public ResponseEntity<ApiResponseDto<VerificationResult>> verifyOrderEmail(
+      @RequestBody @Valid VerifyOrderEmailRequest request) {
+    try {
+      boolean isValid =
+          orderEmailVerificationService.verifyOrderEmail(request.getToken(), request.getEmail());
+
+      if (isValid) {
+        return ResponseEntity.ok(
+            ApiResponseDto.<VerificationResult>builder()
+                .status(200)
+                .message("Email đã được xác thực thành công")
+                .data(VerificationResult.success())
+                .build());
+      } else {
+        return ResponseEntity.ok(
+            ApiResponseDto.<VerificationResult>builder()
+                .status(200)
+                .data(
+                    VerificationResult.error(
+                        "Token không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại mã xác thực."))
+                .build());
+      }
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.ok(
+          ApiResponseDto.<VerificationResult>builder()
+              .status(200)
+              .data(VerificationResult.error(e.getMessage()))
+              .build());
+    } catch (Exception e) {
+      return ResponseEntity.ok(
+          ApiResponseDto.<VerificationResult>builder()
+              .status(200)
+              .data(VerificationResult.error("Có lỗi xảy ra khi xác thực email: " + e.getMessage()))
+              .build());
+    }
+  }
+
+  @PostMapping("/tracking/send-verification-email")
+  @Operation(summary = "Gửi email xác thực cho tracking order")
+  public ResponseEntity<?> sendTrackingVerificationEmail(
+      @RequestParam String trackingNumber, @RequestParam String email) {
+    try {
+      String orderEmail = orderService.getOrderEmailByTrackingNumber(trackingNumber);
+      if (orderEmail == null || !orderEmail.equalsIgnoreCase(email)) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse("Mã đơn hàng hoặc email không đúng"));
+      }
+
+      orderEmailVerificationService.sendOrderVerificationEmail(email, "Khách hàng");
+
+      return ResponseEntity.ok(new MessageResponse("Email xác thực đã được gửi thành công"));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("Không thể gửi email xác thực: " + e.getMessage()));
+    }
   }
 }

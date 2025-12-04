@@ -500,19 +500,19 @@ public class CustomerServiceImpl implements CustomerService {
     Map<String, String> errors = new HashMap<>();
 
     if (!passwordEncoder.matches(dto.getCurrentPassword(), customer.getPassword())) {
-      errors.put("currentPassword", "Current password is incorrect");
+      errors.put("currentPassword", "Mật khẩu hiện tại không chính xác");
     }
 
     if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
-      errors.put("confirmPassword", "Confirm password does not match");
+      errors.put("confirmPassword", "Mật khẩu xác nhận không khớp");
     }
 
     if (passwordEncoder.matches(dto.getNewPassword(), customer.getPassword())) {
-      errors.put("newPassword", "New password must be different from current password");
+      errors.put("newPassword", "Mật khẩu mới phải khác mật khẩu hiện tại");
     }
 
     if (dto.getNewPassword().length() < 8 || dto.getNewPassword().length() > 32) {
-      errors.put("newPassword", "Password must be between 8-32 characters");
+      errors.put("newPassword", "Mật khẩu phải có từ 8-32 ký tự");
     }
 
     if (!errors.isEmpty()) {
