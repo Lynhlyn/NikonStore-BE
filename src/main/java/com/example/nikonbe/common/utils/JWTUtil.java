@@ -67,25 +67,29 @@ public class JWTUtil {
     return extractExpiration(token).before(new Date());
   }
 
-  private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+  private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Boolean rememberMe) {
+    long expirationMillis;
+    if (rememberMe != null && rememberMe) {
+      expirationMillis = 1000L * 60 * 60 * 24 * 30;
+    } else {
+      expirationMillis = 1000L * 60 * AuthConstants.ACCESS_TOKEN_VALIDITY_MINUTES;
+    }
     return Jwts.builder()
         .setClaims(extraClaims)
         .setSubject(userDetails.getUsername())
         .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(
-            new Date(
-                System.currentTimeMillis()
-                    + 1000L * 60 * AuthConstants.ACCESS_TOKEN_VALIDITY_MINUTES))
+        .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
         .signWith(getSigningKey(), SignatureAlgorithm.HS256)
         .compact();
   }
 
   private String generateStaffToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    long expirationMillis = 1000L * 60 * 60 * 5;
     return Jwts.builder()
         .setClaims(extraClaims)
         .setSubject(userDetails.getUsername())
         .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 20))
+        .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
         .signWith(getSigningKey(), SignatureAlgorithm.HS256)
         .compact();
   }
@@ -94,7 +98,14 @@ public class JWTUtil {
     Map<String, Object> claims = new HashMap<>();
     claims.put("sub", userDetails.getUsername());
     claims.put("id", userId);
-    return generateToken(claims, userDetails);
+    return generateToken(claims, userDetails, false);
+  }
+
+  public String generateToken(UserDetails userDetails, Integer userId, Boolean rememberMe) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("sub", userDetails.getUsername());
+    claims.put("id", userId);
+    return generateToken(claims, userDetails, rememberMe);
   }
 
   public String generateStaffToken(UserDetails userDetails, Integer staffId) {

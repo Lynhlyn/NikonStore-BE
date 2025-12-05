@@ -1,5 +1,6 @@
 package com.example.nikonbe.security.service.auth;
 
+import com.example.nikonbe.common.constants.AuthConstants;
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.enums.UserRole;
 import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
@@ -103,12 +104,19 @@ public class StaffAuthService {
       String accessToken = jwtUtil.generateStaffToken(userDetails, staff.getId());
       String refreshToken = jwtUtil.generateStaffRefreshToken(userDetails, staff.getId());
 
+      LocalDateTime refreshExpiresAt;
+      if (AuthConstants.MODE_TEST_REFRESH) {
+        refreshExpiresAt = LocalDateTime.now().plusMinutes(AuthConstants.REFRESH_TOKEN_VALIDITY_MINUTES_TEST);
+      } else {
+        refreshExpiresAt = LocalDateTime.now().plusDays(AuthConstants.REFRESH_TOKEN_VALIDITY_DAYS);
+      }
+
       StaffToken staffToken =
           StaffToken.builder()
               .staff(staff)
               .accessToken(accessToken)
               .refreshToken(refreshToken)
-              .expiresAt(LocalDateTime.now().plusDays(30))
+              .expiresAt(refreshExpiresAt)
               .build();
 
       staffTokenRepository.save(staffToken);
@@ -153,7 +161,10 @@ public class StaffAuthService {
     UserDetails userDetails = staffDetailService.loadUserByUsername(token.getStaff().getUsername());
     String newAccessToken = jwtUtil.generateStaffToken(userDetails, token.getStaff().getId());
 
+    String newRefreshToken = jwtUtil.generateStaffRefreshToken(userDetails, token.getStaff().getId());
+
     token.setAccessToken(newAccessToken);
+    token.setRefreshToken(newRefreshToken);
     token.setUpdatedAt(LocalDateTime.now());
     StaffToken updatedToken = staffTokenRepository.save(token);
 

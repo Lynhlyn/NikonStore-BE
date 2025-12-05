@@ -142,10 +142,10 @@ public class CustomerAuthService {
       String deviceType,
       String userAgent,
       String ipAddress) {
-    String accessToken = jwtUtil.generateToken(userDetails, customer.getId());
+    boolean isRememberMe = rememberMe != null && rememberMe;
+    String accessToken = jwtUtil.generateToken(userDetails, customer.getId(), isRememberMe);
     String refreshToken = jwtUtil.generateRefreshToken(userDetails, customer.getId());
 
-    boolean isRememberMe = rememberMe != null && rememberMe;
     LocalDateTime refreshExpiresAt;
     if (AuthConstants.MODE_TEST_REFRESH) {
       refreshExpiresAt = LocalDateTime.now().plusMinutes(AuthConstants.REFRESH_TOKEN_VALIDITY_MINUTES_TEST);
@@ -195,9 +195,14 @@ public class CustomerAuthService {
 
     UserDetails userDetails =
         customerDetailService.loadUserByUsername(token.getCustomer().getEmail());
-    String newAccessToken = jwtUtil.generateToken(userDetails, token.getCustomer().getId());
+    
+    LocalDateTime refreshExpiresAt = token.getExpiresAt();
+    LocalDateTime now = LocalDateTime.now();
+    long daysUntilExpiry = java.time.Duration.between(now, refreshExpiresAt).toDays();
+    boolean isRememberMe = daysUntilExpiry >= AuthConstants.REFRESH_TOKEN_VALIDITY_DAYS - 1;
+    
+    String newAccessToken = jwtUtil.generateToken(userDetails, token.getCustomer().getId(), isRememberMe);
 
-    // Rotate refresh token
     String newRefreshToken = jwtUtil.generateRefreshToken(userDetails, token.getCustomer().getId());
 
     token.setAccessToken(newAccessToken);
