@@ -37,6 +37,9 @@ public class PaymentController {
   @Value("${api.frontendAdmin.url:http://localhost:3001}")
   private String frontendAdminUrl;
 
+  @Value("${api.frontend.url:http://localhost:3000}")
+  private String frontendBaseUrl;
+
   @GetMapping("/return")
   @PostMapping("/return")
   @Operation(
@@ -50,50 +53,76 @@ public class PaymentController {
       Map<String, String> vnpParams = new HashMap<>(params);
 
       String responseCode = params.get("vnp_ResponseCode");
-      String orderId = params.get("vnp_TxnRef");
+      String trackingNumber = params.get("vnp_OrderInfo");
+      String orderIdStr = params.get("vnp_TxnRef");
 
-      log.info("Processing VNPay callback - Order: {}, ResponseCode: {}", orderId, responseCode);
+      log.info("Processing VNPay callback - TrackingNumber: {}, OrderId: {}, ResponseCode: {}", trackingNumber, orderIdStr, responseCode);
 
-      String context = "main";
-      try {
-        Order order = orderRepository.findByTrackingNumber(orderId).orElse(null);
-        if (order != null && order.getNote() != null) {
-          String note = order.getNote();
-          String paymentContextMarker = "PAYMENT_CONTEXT:";
-          int startIndex = note.indexOf(paymentContextMarker);
-          if (startIndex != -1) {
-            int contextStart = startIndex + paymentContextMarker.length();
-            int contextEnd = note.indexOf("|", contextStart);
-            if (contextEnd == -1) {
-              contextEnd = note.length();
-            }
-            String extractedContext = note.substring(contextStart, contextEnd).trim();
-            if (extractedContext.equals("main") || extractedContext.equals("staff")) {
-              context = extractedContext;
-            }
-          }
-        }
-      } catch (Exception e) {
-        log.warn("Error extracting context from order note: {}", e.getMessage());
+      if (trackingNumber == null || trackingNumber.isEmpty()) {
+        log.error("TrackingNumber is missing in VNPay callback");
+        throw new IllegalArgumentException("TrackingNumber không được để trống trong callback");
       }
 
-      posService.handleVnpayCallback(vnpParams);
+      Order order = orderRepository.findByTrackingNumber(trackingNumber).orElse(null);
+      if (order == null) {
+        log.error("Order not found with trackingNumber: {}", trackingNumber);
+        throw new IllegalArgumentException("Không tìm thấy đơn hàng với trackingNumber: " + trackingNumber);
+      }
 
-      String contextPath = context.equals("staff") ? "/staff" : "/main";
-
+      String orderType = order.getOrderType();
       String redirectUrl;
-      if ("00".equals(responseCode)) {
-        redirectUrl = frontendAdminUrl + contextPath + "/pos?payment=success&orderId=" + orderId;
-        log.info("Payment successful for order: {}. Redirecting to: {}", orderId, redirectUrl);
-      } else {
+
+      if ("ONLINE".equalsIgnoreCase(orderType)) {
+        if ("00".equals(responseCode)) {
+          orderService.completeOnlineOrder(trackingNumber);
+          log.info("Online order payment successful: {}. Redirecting to client frontend", trackingNumber);
+        } else {
+          log.warn("Online order payment failed: {}. ResponseCode: {}", trackingNumber, responseCode);
+        }
         redirectUrl =
-            frontendAdminUrl
-                + contextPath
-                + "/pos?payment=failed&orderId="
-                + orderId
-                + "&errorCode="
-                + responseCode;
-        log.warn("Payment failed for order: {}. ResponseCode: {}", orderId, responseCode);
+            frontendBaseUrl.endsWith("/")
+                ? frontendBaseUrl + "checkout/confirmation"
+                : frontendBaseUrl + "/checkout/confirmation";
+      } else {
+        String context = "main";
+        try {
+          if (order.getNote() != null) {
+            String note = order.getNote();
+            String paymentContextMarker = "PAYMENT_CONTEXT:";
+            int startIndex = note.indexOf(paymentContextMarker);
+            if (startIndex != -1) {
+              int contextStart = startIndex + paymentContextMarker.length();
+              int contextEnd = note.indexOf("|", contextStart);
+              if (contextEnd == -1) {
+                contextEnd = note.length();
+              }
+              String extractedContext = note.substring(contextStart, contextEnd).trim();
+              if (extractedContext.equals("main") || extractedContext.equals("staff")) {
+                context = extractedContext;
+              }
+            }
+          }
+        } catch (Exception e) {
+          log.warn("Error extracting context from order note: {}", e.getMessage());
+        }
+
+        posService.handleVnpayCallback(vnpParams);
+
+        String contextPath = context.equals("staff") ? "/staff" : "/main";
+
+        if ("00".equals(responseCode)) {
+          redirectUrl = frontendAdminUrl + contextPath + "/pos?payment=success&orderId=" + trackingNumber;
+          log.info("POS order payment successful: {}. Redirecting to: {}", trackingNumber, redirectUrl);
+        } else {
+          redirectUrl =
+              frontendAdminUrl
+                  + contextPath
+                  + "/pos?payment=failed&orderId="
+                  + trackingNumber
+                  + "&errorCode="
+                  + responseCode;
+          log.warn("POS order payment failed: {}. ResponseCode: {}", trackingNumber, responseCode);
+        }
       }
 
       String htmlContent =
@@ -123,7 +152,9 @@ public class PaymentController {
           .body(htmlContent);
     } catch (Exception e) {
       log.error("Error handling VNPay callback: {}", e.getMessage(), e);
-      String redirectUrl = frontendAdminUrl + "/main/pos?payment=error";
+      String redirectUrl = frontendBaseUrl.endsWith("/")
+          ? frontendBaseUrl + "checkout/confirmation"
+          : frontendBaseUrl + "/checkout/confirmation";
       String htmlContent =
           "<!DOCTYPE html>"
               + "<html>"

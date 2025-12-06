@@ -32,6 +32,7 @@ import com.example.nikonbe.modules.product_detail.repository.ProductDetailReposi
 import com.example.nikonbe.modules.staff.repository.StaffRepository;
 import com.example.nikonbe.modules.voucher.entity.Voucher;
 import com.example.nikonbe.modules.voucher.repository.VoucherRepository;
+import com.example.nikonbe.modules.vnpay.service.interF.VNPayService;
 import com.example.nikonbe.security.service.mail.EmailService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -66,6 +67,7 @@ public class OrderServiceImpl implements OrderService {
   private final ProductDetailRepository productDetailRepository;
   private final VoucherRepository voucherRepository;
   private final EmailService emailService;
+  private final VNPayService vnPayService;
 
   @Override
   @Transactional(readOnly = true)
@@ -406,6 +408,12 @@ public class OrderServiceImpl implements OrderService {
               null,
               Status.PENDING_PAYMENT,
               "Đơn hàng online được tạo, chờ thanh toán"));
+      paymentUrl =
+          vnPayService.createPaymentUrl(
+              finalAmount.longValue(),
+              savedOrder.getTrackingNumber(),
+              request.getIpAddress() != null ? request.getIpAddress() : "127.0.0.1",
+              savedOrder.getId().toString());
     } else {
       savedOrder.setStatus(Status.PENDING_CONFIRMATION);
       savedOrder.setPaymentStatus("PENDING");
@@ -477,6 +485,12 @@ public class OrderServiceImpl implements OrderService {
               null,
               Status.PENDING_PAYMENT,
               "Đơn hàng mua ngay được tạo, chờ thanh toán"));
+      paymentUrl =
+          vnPayService.createPaymentUrl(
+              finalAmount.longValue(),
+              savedOrder.getTrackingNumber(),
+              request.getIpAddress() != null ? request.getIpAddress() : "127.0.0.1",
+              savedOrder.getId().toString());
     } else {
       savedOrder.setStatus(Status.PENDING_CONFIRMATION);
       savedOrder.setPaymentStatus("PENDING");
