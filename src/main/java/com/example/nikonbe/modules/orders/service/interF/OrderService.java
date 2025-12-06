@@ -38,6 +38,8 @@ public interface OrderService {
 
   void completeOnlineOrder(String trackingNumber);
 
+  void handlePaymentFailed(String trackingNumber);
+
   GetOrderDetailResponse trackingOrder(String trackingNumber, String email);
 
   void cleanupOldPendingOrders();

@@ -76,13 +76,18 @@ public class PaymentController {
         if ("00".equals(responseCode)) {
           orderService.completeOnlineOrder(trackingNumber);
           log.info("Online order payment successful: {}. Redirecting to client frontend", trackingNumber);
+          redirectUrl =
+              frontendBaseUrl.endsWith("/")
+                  ? frontendBaseUrl + "checkout/confirmation"
+                  : frontendBaseUrl + "/checkout/confirmation";
         } else {
+          orderService.handlePaymentFailed(trackingNumber);
           log.warn("Online order payment failed: {}. ResponseCode: {}", trackingNumber, responseCode);
+          redirectUrl =
+              frontendBaseUrl.endsWith("/")
+                  ? frontendBaseUrl + "checkout/payment-failure"
+                  : frontendBaseUrl + "/checkout/payment-failure";
         }
-        redirectUrl =
-            frontendBaseUrl.endsWith("/")
-                ? frontendBaseUrl + "checkout/confirmation"
-                : frontendBaseUrl + "/checkout/confirmation";
       } else {
         String context = "main";
         try {
@@ -180,6 +185,20 @@ public class PaymentController {
       return org.springframework.http.ResponseEntity.ok()
           .contentType(MediaType.TEXT_HTML)
           .body(htmlContent);
+    }
+  }
+
+  @PostMapping("/failed")
+  @Operation(
+      summary = "Xử lý thanh toán thất bại",
+      description = "API cập nhật trạng thái đơn hàng khi thanh toán thất bại")
+  public ResponseEntity<?> handlePaymentFailed(@RequestParam String trackingNumber) {
+    try {
+      orderService.handlePaymentFailed(trackingNumber);
+      return ResponseEntity.ok().body("Đã cập nhật trạng thái đơn hàng thành công");
+    } catch (Exception e) {
+      log.error("Error handling payment failed: {}", e.getMessage(), e);
+      return ResponseEntity.badRequest().body("Có lỗi xảy ra khi cập nhật trạng thái đơn hàng");
     }
   }
 

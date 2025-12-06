@@ -575,6 +575,47 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
+  @Transactional
+  public void handlePaymentFailed(String trackingNumber) {
+    Order order =
+        orderRepository
+            .findByTrackingNumber(trackingNumber)
+            .orElseThrow(
+                () -> new ResourceNotFoundException("Order", "trackingNumber", trackingNumber));
+
+    if (order.getStatus() == Status.PENDING_PAYMENT) {
+      Status statusBefore = order.getStatus();
+      order.setStatus(Status.CANCELLED);
+      order.setPaymentStatus("FAILED");
+
+      if (statusBefore == Status.PENDING_PAYMENT) {
+        updateReservedStockOnCancellation(order.getId());
+      }
+
+      String failureNote = "Thanh toán VNPAY thất bại. Đơn hàng đã được hủy.";
+      String currentNote = order.getNote();
+      if (currentNote != null && !currentNote.trim().isEmpty()) {
+        order.setNote(currentNote + " - " + failureNote);
+      } else {
+        order.setNote(failureNote);
+      }
+
+      OrderHistory orderHistory =
+          createOrderHistory(
+              order,
+              null,
+              order.getCustomer() != null ? order.getCustomer().getId() : null,
+              statusBefore,
+              Status.CANCELLED,
+              failureNote);
+      orderHistoryRepository.save(orderHistory);
+
+      orderRepository.save(order);
+      log.info("Order payment failed and cancelled: {}", trackingNumber);
+    }
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public GetOrderDetailResponse trackingOrder(String trackingNumber, String email) {
     Order order =
