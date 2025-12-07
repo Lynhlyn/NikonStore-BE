@@ -58,4 +58,6 @@ public interface PosService {
   String createVnpayQrCode(Integer orderId, String ipAddr, String context);
 
   void handleVnpayCallback(Map<String, String> params);
+
+  void cleanupOldPendingOrders();
 }

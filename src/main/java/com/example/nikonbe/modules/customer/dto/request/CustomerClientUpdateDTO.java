@@ -37,11 +37,11 @@ public class CustomerClientUpdateDTO {
   @Schema(description = "Customer date of birth", example = "1990-01-01")
   private LocalDate dateOfBirth;
 
-  @Pattern(regexp = "^(Nam|Nữ|Khác)$", message = "Gender must be Nam, Nữ or Khác")
+  @Pattern(regexp = "^(Male|Female|Other)$", message = "Gender must be Male, Female or Other")
   @Schema(
       description = "Gender",
-      example = "Nam",
-      allowableValues = {"Nam", "Nữ", "Khác"})
+      example = "Male",
+      allowableValues = {"Male", "Female", "Other"})
   private String gender;
 
   @Schema(description = "Profile image URL", example = "https://example.com/image.jpg")

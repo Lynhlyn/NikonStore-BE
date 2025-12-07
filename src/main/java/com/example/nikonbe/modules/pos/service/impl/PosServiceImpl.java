@@ -306,6 +306,7 @@ public class PosServiceImpl implements PosService {
         order -> {
           ListOrderPosResponse response = new ListOrderPosResponse();
           response.setId(order.getId());
+          response.setOrderCode(order.getTrackingNumber());
           response.setCustomer(
               order.getCustomer() != null ? mapToCustomerResponseDTO(order.getCustomer()) : null);
           response.setTotalAmount(order.getTotalAmount());
@@ -1232,6 +1233,55 @@ public class PosServiceImpl implements PosService {
       order.setPaymentStatus("failed");
       order.setNote("Thanh toán VNPAY-QR thất bại - Mã lỗi: " + responseCode);
       orderRepository.save(order);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void cleanupOldPendingOrders() {
+    LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1);
+    List<Order> oldPendingOrders =
+        orderRepository.findOldPendingOrders(Status.PENDING_PAYMENT, "IN_STORE", cutoffTime);
+
+    int deletedCount = 0;
+    int cancelledCount = 0;
+
+    for (Order order : oldPendingOrders) {
+      try {
+        if (order.getId() == null) {
+          log.warn("Skipping order with null ID: {}", order.getTrackingNumber());
+          continue;
+        }
+
+        boolean hasProducts = order.getOrderDetails() != null && !order.getOrderDetails().isEmpty();
+
+        Integer staffId = order.getStaff() != null ? order.getStaff().getId() : 1;
+        String cancelReason = "Hủy tự động do quá hạn 1 tiếng chờ thanh toán";
+
+        cancelPendingOrder(order.getId(), staffId, cancelReason);
+
+        if (!hasProducts) {
+          deletedCount++;
+        } else {
+          cancelledCount++;
+        }
+
+        log.info("Processed old pending order: {}", order.getTrackingNumber());
+
+      } catch (Exception e) {
+        log.error(
+            "Error processing order {}: {}",
+            order.getId() != null ? order.getId() : "null",
+            e.getMessage());
+      }
+    }
+
+    if (!oldPendingOrders.isEmpty()) {
+      log.info(
+          "Processed {} old pending IN_STORE orders: Deleted: {}, Cancelled: {}",
+          oldPendingOrders.size(),
+          deletedCount,
+          cancelledCount);
     }
   }
 }

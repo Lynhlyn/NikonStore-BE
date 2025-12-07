@@ -20,6 +20,7 @@ import com.example.nikonbe.modules.customer.service.interF.CustomerService;
 import com.example.nikonbe.modules.shipping_address.mapper.ShippingAddressMapper;
 import com.example.nikonbe.security.service.mail.EmailService;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -344,6 +345,17 @@ public class CustomerServiceImpl implements CustomerService {
       errors.put("phoneNumber", "Phone number already exists");
     }
 
+    if (dto.getDateOfBirth() != null && !dto.getDateOfBirth().trim().isEmpty()) {
+      try {
+        LocalDate dateOfBirth = LocalDate.parse(dto.getDateOfBirth());
+        if (dateOfBirth.isAfter(LocalDate.now())) {
+          errors.put("dateOfBirth", "Ngày sinh không được sau thời gian hiện tại");
+        }
+      } catch (Exception e) {
+        errors.put("dateOfBirth", "Ngày sinh không hợp lệ");
+      }
+    }
+
     if (!errors.isEmpty()) {
       throw new ValidationException("Validation failed", errors);
     }
@@ -399,6 +411,11 @@ public class CustomerServiceImpl implements CustomerService {
     // Validate status
     if (dto.getStatus() == null) {
       errors.put("status", "Trạng thái không được để trống.");
+    }
+
+    // Validate date of birth
+    if (dto.getDateOfBirth() != null && dto.getDateOfBirth().isAfter(LocalDate.now())) {
+      errors.put("dateOfBirth", "Ngày sinh không được sau thời gian hiện tại");
     }
 
     if (!errors.isEmpty()) {
@@ -489,6 +506,10 @@ public class CustomerServiceImpl implements CustomerService {
       if (customerRepository.existsByPhoneNumberAndIdNot(dto.getPhoneNumber(), customerId)) {
         errors.put("phoneNumber", "Phone number already exists");
       }
+    }
+
+    if (dto.getDateOfBirth() != null && dto.getDateOfBirth().isAfter(LocalDate.now())) {
+      errors.put("dateOfBirth", "Ngày sinh không được sau thời gian hiện tại");
     }
 
     if (!errors.isEmpty()) {

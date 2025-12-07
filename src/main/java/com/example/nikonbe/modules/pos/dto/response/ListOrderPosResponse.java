@@ -20,6 +20,9 @@ public class ListOrderPosResponse {
   @Schema(description = "ID đơn hàng", example = "1")
   private Integer id;
 
+  @Schema(description = "Mã đơn hàng", example = "ORD-2024-001")
+  private String orderCode;
+
   @Schema(description = "ID khách hàng (nullable)", example = "1")
   private CustomerResponseDTO customer;
 

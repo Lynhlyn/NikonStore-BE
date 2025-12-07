@@ -206,7 +206,9 @@ public class OrderServiceImpl implements OrderService {
     String cancellationNote =
         createCancellationNote(order, request.getReason(), request.getStaffId());
     String currentNote = order.getNote();
-    if (currentNote != null && !currentNote.trim().isEmpty()) {
+    if (currentNote != null 
+        && !currentNote.trim().isEmpty() 
+        && !currentNote.trim().equalsIgnoreCase("null")) {
       order.setNote(currentNote + " - " + cancellationNote);
     } else {
       order.setNote(cancellationNote);
