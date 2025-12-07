@@ -188,6 +188,30 @@ public class PaymentController {
     }
   }
 
+  @PostMapping("/success")
+  @Operation(
+      summary = "Xử lý thanh toán thành công",
+      description = "API cập nhật trạng thái đơn hàng khi thanh toán thành công")
+  public ResponseEntity<?> handlePaymentSuccess(@RequestParam String trackingNumber) {
+    try {
+      Order order = orderService.getOrderByTrackingNumber(trackingNumber);
+      if (order == null) {
+        return ResponseEntity.badRequest().body("Không tìm thấy đơn hàng");
+      }
+      
+      if (!"ONLINE".equalsIgnoreCase(order.getOrderType())) {
+        return ResponseEntity.badRequest().body("API này chỉ dành cho đơn hàng online");
+      }
+      
+      orderService.completeOnlineOrder(trackingNumber);
+      log.info("Payment success confirmed for order: {}", trackingNumber);
+      return ResponseEntity.ok().body("Đã cập nhật trạng thái đơn hàng thành công");
+    } catch (Exception e) {
+      log.error("Error handling payment success: {}", e.getMessage(), e);
+      return ResponseEntity.badRequest().body("Có lỗi xảy ra khi cập nhật trạng thái đơn hàng");
+    }
+  }
+
   @PostMapping("/failed")
   @Operation(
       summary = "Xử lý thanh toán thất bại",

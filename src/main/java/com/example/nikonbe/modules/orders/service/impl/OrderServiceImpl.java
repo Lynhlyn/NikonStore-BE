@@ -540,9 +540,16 @@ public class OrderServiceImpl implements OrderService {
             .orElseThrow(
                 () -> new ResourceNotFoundException("Order", "trackingNumber", trackingNumber));
 
-    if (order.getStatus() == Status.PENDING_PAYMENT) {
-      order.setStatus(Status.PENDING_CONFIRMATION);
+    Status statusBefore = order.getStatus();
+    boolean shouldUpdateStatus = order.getStatus() == Status.PENDING_PAYMENT;
+    boolean shouldUpdatePaymentStatus = !"completed".equalsIgnoreCase(order.getPaymentStatus());
+
+    if (shouldUpdatePaymentStatus) {
       order.setPaymentStatus("completed");
+    }
+
+    if (shouldUpdateStatus) {
+      order.setStatus(Status.PENDING_CONFIRMATION);
 
       try {
         BigDecimal orderTotal =
@@ -565,13 +572,15 @@ public class OrderServiceImpl implements OrderService {
               order,
               null,
               order.getCustomer() != null ? order.getCustomer().getId() : null,
-              Status.PENDING_PAYMENT,
+              statusBefore,
               Status.PENDING_CONFIRMATION,
               "Thanh toán thành công. Đơn hàng chờ xác nhận.");
       orderHistoryRepository.save(orderHistory);
-
-      orderRepository.save(order);
+    } else if (shouldUpdatePaymentStatus) {
+      log.info("Payment status updated to completed for order: {}, current status: {}", trackingNumber, order.getStatus());
     }
+
+    orderRepository.save(order);
   }
 
   @Override

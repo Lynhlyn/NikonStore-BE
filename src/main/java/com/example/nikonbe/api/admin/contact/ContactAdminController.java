@@ -61,7 +61,7 @@ public class ContactAdminController {
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Lấy liên hệ theo ID")
+  @Operation(summary = "Lấy liên hệ theo ID và đánh dấu đã xem")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
@@ -71,7 +71,7 @@ public class ContactAdminController {
   })
   public ResponseEntity<ApiResponseDto<ContactResponseDTO>> getById(
       @Parameter(description = "ID liên hệ") @PathVariable Integer id) {
-    ContactResponseDTO result = contactService.getById(id);
+    ContactResponseDTO result = contactService.getByIdAndMarkAsRead(id);
     return ResponseUtils.success(result, "Contact retrieved successfully");
   }
 

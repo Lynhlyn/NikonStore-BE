@@ -54,6 +54,20 @@ public class ContactServiceImpl implements ContactService {
   }
 
   @Override
+  public ContactResponseDTO getByIdAndMarkAsRead(Integer id) {
+    Contact contact =
+        contactRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Contact", "id", id));
+    if (contact.getStatus() == Status.INACTIVE) {
+      contact.setStatus(Status.ACTIVE);
+      contact.setUpdatedAt(LocalDateTime.now());
+      contactRepository.save(contact);
+    }
+    return contactMapper.toDto(contact);
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public List<ContactResponseDTO> getAll() {
     return contactMapper.toDtoList(contactRepository.findAll());

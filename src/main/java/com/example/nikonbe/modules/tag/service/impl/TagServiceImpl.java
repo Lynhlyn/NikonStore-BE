@@ -3,6 +3,12 @@ package com.example.nikonbe.modules.tag.service.impl;
 import com.example.nikonbe.common.enums.Status;
 import com.example.nikonbe.common.exceptions.ResourceNotFoundException;
 import com.example.nikonbe.common.exceptions.ValidationException;
+import com.example.nikonbe.modules.product.entity.Product;
+import com.example.nikonbe.modules.product.repository.ProductRepository;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
+import com.example.nikonbe.modules.product_tag.entity.ProductTag;
+import com.example.nikonbe.modules.product_tag.repository.ProductTagRepository;
 import com.example.nikonbe.modules.tag.dto.request.TagCreateDTO;
 import com.example.nikonbe.modules.tag.dto.request.TagUpdateDTO;
 import com.example.nikonbe.modules.tag.dto.response.TagResponseDTO;
@@ -25,6 +31,9 @@ public class TagServiceImpl implements TagService {
 
   private final TagRepository tagRepository;
   private final TagMapper tagMapper;
+  private final ProductTagRepository productTagRepository;
+  private final ProductRepository productRepository;
+  private final ProductDetailRepository productDetailRepository;
 
   @Override
   @Transactional
@@ -44,6 +53,24 @@ public class TagServiceImpl implements TagService {
 
     tagMapper.updateEntityFromDto(dto, tag);
     Tag updatedTag = tagRepository.save(tag);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<ProductTag> productTags = productTagRepository.findByTagId(id);
+      for (ProductTag productTag : productTags) {
+        Product product = productTag.getProduct();
+        if (product != null && product.getStatus() == Status.ACTIVE) {
+          product.setStatus(dto.getStatus());
+          productRepository.save(product);
+          
+          List<ProductDetail> productDetails =
+              productDetailRepository.findByProductIdAndStatus(product.getId(), Status.ACTIVE);
+          for (ProductDetail detail : productDetails) {
+            detail.setStatus(dto.getStatus());
+            productDetailRepository.save(detail);
+          }
+        }
+      }
+    }
 
     return tagMapper.toDto(updatedTag);
   }

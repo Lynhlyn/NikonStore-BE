@@ -15,6 +15,8 @@ public interface ContactService {
 
   ContactResponseDTO getById(Integer id);
 
+  ContactResponseDTO getByIdAndMarkAsRead(Integer id);
+
   List<ContactResponseDTO> getAll();
 
   Page<ContactResponseDTO> getAllPaginated(Pageable pageable);
