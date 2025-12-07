@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/upload")
+@RequestMapping("${api.version}/upload")
 @Tag(name = "File Upload", description = "API quản lý tải lên và xóa hình ảnh")
 @Validated
 public class ImageUploadController {

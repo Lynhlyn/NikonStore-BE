@@ -24,6 +24,8 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
       "SELECT r FROM Review r "
           + "LEFT JOIN FETCH r.customer "
           + "LEFT JOIN FETCH r.product "
+          + "LEFT JOIN FETCH r.orderDetail od "
+          + "LEFT JOIN FETCH od.order "
           + "WHERE r.product.id = :productId AND r.status = :status "
           + "ORDER BY r.createdAt DESC")
   Page<Review> findByProductIdAndStatusWithRelations(
@@ -33,6 +35,8 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
       "SELECT r FROM Review r "
           + "LEFT JOIN FETCH r.customer "
           + "LEFT JOIN FETCH r.product "
+          + "LEFT JOIN FETCH r.orderDetail od "
+          + "LEFT JOIN FETCH od.order "
           + "WHERE r.product.id = :productId "
           + "ORDER BY r.createdAt DESC")
   Page<Review> findByProductIdWithRelations(
@@ -42,6 +46,8 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
       "SELECT r FROM Review r "
           + "LEFT JOIN FETCH r.customer "
           + "LEFT JOIN FETCH r.product "
+          + "LEFT JOIN FETCH r.orderDetail od "
+          + "LEFT JOIN FETCH od.order "
           + "WHERE r.id = :id")
   Optional<Review> findByIdWithRelations(@Param("id") Integer id);
 
@@ -51,13 +57,14 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
   @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId AND r.status = 1")
   Long getReviewCountByProductId(@Param("productId") Integer productId);
 
-  boolean existsByProductIdAndCustomerIdAndOrderDetailId(
-      Integer productId, Integer customerId, Integer orderDetailId);
+  boolean existsByOrderDetailId(Integer orderDetailId);
 
   @Query(
       "SELECT r FROM Review r "
           + "LEFT JOIN FETCH r.customer "
           + "LEFT JOIN FETCH r.product "
+          + "LEFT JOIN FETCH r.orderDetail od "
+          + "LEFT JOIN FETCH od.order "
           + "WHERE r.orderDetail.order.id = :orderId "
           + "ORDER BY r.createdAt DESC")
   List<Review> findByOrderIdWithRelations(@Param("orderId") Integer orderId);

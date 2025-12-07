@@ -53,26 +53,33 @@ public class ReviewServiceImpl implements ReviewService {
             .findById(customerId)
             .orElseThrow(() -> new ResourceNotFoundException("Khách hàng không tồn tại"));
 
-    OrderDetail orderDetail = null;
-    if (dto.getOrderDetailId() != null) {
-      orderDetail =
-          orderDetailRepository
-              .findById(dto.getOrderDetailId())
-              .orElseThrow(() -> new ResourceNotFoundException("Chi tiết đơn hàng không tồn tại"));
-      
-      boolean exists =
-          reviewRepository.existsByProductIdAndCustomerIdAndOrderDetailId(
-              dto.getProductId(), customerId, dto.getOrderDetailId());
-      if (exists) {
-        throw new BadRequestException("Bạn đã đánh giá sản phẩm này cho đơn hàng này rồi");
-      }
+    if (dto.getOrderDetailId() == null) {
+      throw new BadRequestException("orderDetailId là bắt buộc để tạo đánh giá");
+    }
+
+    OrderDetail orderDetail =
+        orderDetailRepository
+            .findById(dto.getOrderDetailId())
+            .orElseThrow(() -> new ResourceNotFoundException("Chi tiết đơn hàng không tồn tại"));
+
+    if (!orderDetail.getOrder().getCustomer().getId().equals(customerId)) {
+      throw new UnauthorizedException("Bạn không có quyền đánh giá đơn hàng này");
+    }
+
+    boolean exists = reviewRepository.existsByOrderDetailId(dto.getOrderDetailId());
+    if (exists) {
+      throw new BadRequestException("Bạn đã đánh giá sản phẩm này cho đơn hàng này rồi");
     }
 
     Review review = reviewMapper.toEntity(dto);
     review.setCustomer(customer);
+    review.setOrderDetail(orderDetail);
     
-    if (orderDetail != null && orderDetail.getProductDetail() != null) {
+    if (orderDetail.getProductDetail() != null) {
       review.setProductDetail(orderDetail.getProductDetail());
+      if (review.getProduct() == null && orderDetail.getProductDetail().getProduct() != null) {
+        review.setProduct(orderDetail.getProductDetail().getProduct());
+      }
     } else {
       throw new BadRequestException("Không thể xác định chi tiết sản phẩm từ đơn hàng");
     }

@@ -9,6 +9,7 @@ import com.example.nikonbe.modules.customer.dto.response.CustomerResponseDTO;
 import com.example.nikonbe.modules.customer.entity.Customer;
 import com.example.nikonbe.modules.customer.mapper.CustomerMapper;
 import com.example.nikonbe.modules.customervoucher.repository.CustomerVoucherRepository;
+import com.example.nikonbe.modules.customervoucher.service.interF.CustomerVoucherService;
 import com.example.nikonbe.modules.voucher.dto.request.VoucherCreateDTO;
 import com.example.nikonbe.modules.voucher.dto.request.VoucherUpdateDTO;
 import com.example.nikonbe.modules.voucher.dto.response.VoucherDiscountResponseDTO;
@@ -46,6 +47,7 @@ public class VoucherServiceImpl implements VoucherService {
   private final CustomerVoucherRepository customerVoucherRepository;
   private final VoucherMapper voucherMapper;
   private final CustomerMapper customerMapper;
+  private final CustomerVoucherService customerVoucherService;
 
   @Override
   @Transactional
@@ -68,6 +70,19 @@ public class VoucherServiceImpl implements VoucherService {
     voucher.setStatus(initialStatus);
 
     Voucher savedVoucher = voucherRepository.save(voucher);
+
+    if (dto.getCustomerIds() != null && !dto.getCustomerIds().isEmpty()) {
+      log.info(
+          "Assigning voucher ID {} to {} customers", savedVoucher.getId(), dto.getCustomerIds().size());
+      try {
+        customerVoucherService.assignVoucherToCustomers(savedVoucher.getId(), dto.getCustomerIds());
+        log.info(
+            "Successfully assigned voucher ID {} to customers", savedVoucher.getId());
+      } catch (Exception e) {
+        log.error(
+            "Error assigning voucher ID {} to customers: {}", savedVoucher.getId(), e.getMessage());
+      }
+    }
 
     log.info(
         "Created voucher successfully with ID: {} and status: {}",

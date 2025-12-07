@@ -21,6 +21,7 @@ public class ReviewCreateDTO {
 
   private String comment;
 
+  @NotNull(message = "orderDetailId là bắt buộc")
   private Integer orderDetailId;
 
   private List<String> imageUrls;

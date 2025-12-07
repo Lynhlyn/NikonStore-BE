@@ -17,6 +17,8 @@ public class ReviewResponseDTO {
   private String comment;
   private Integer status;
   private List<ReviewImageResponseDTO> reviewImages;
+  private Integer orderDetailId;
+  private Integer orderId;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 }

@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -74,6 +75,9 @@ public class VoucherCreateDTO {
   @Builder.Default
   @Schema(description = "Voucher có công khai không", example = "true", defaultValue = "true")
   private Boolean isPublic = true;
+
+  @Schema(description = "Danh sách ID khách hàng để gán voucher", example = "[1, 2, 3]")
+  private List<Integer> customerIds;
 
   @AssertTrue(message = "Ngày kết thúc phải sau ngày bắt đầu")
   @Schema(hidden = true)

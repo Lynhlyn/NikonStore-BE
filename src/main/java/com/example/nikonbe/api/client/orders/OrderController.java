@@ -5,6 +5,7 @@ import com.example.nikonbe.common.response.PaginationResponse;
 import com.example.nikonbe.modules.orders.dto.request.CancelOrderRequest;
 import com.example.nikonbe.modules.orders.dto.request.CreateInstantOrderRequest;
 import com.example.nikonbe.modules.orders.dto.request.CreateOrderRequest;
+import com.example.nikonbe.modules.orders.dto.request.UpdateStatusOrderRequest;
 import com.example.nikonbe.modules.orders.dto.response.GetOrderDetailResponse;
 import com.example.nikonbe.modules.orders.dto.response.ListOrderResponse;
 import com.example.nikonbe.modules.orders.dto.response.OrderResponse;
@@ -301,6 +302,33 @@ public class OrderController {
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new ErrorResponse("Không thể gửi email xác thực: " + e.getMessage()));
+    }
+  }
+
+  @PutMapping("/{orderId}/status")
+  @Operation(
+      summary = "Cập nhật trạng thái đơn hàng (cho khách hàng)",
+      description = "Khách hàng có thể cập nhật trạng thái đơn hàng (ví dụ: đã nhận hàng)")
+  public ResponseEntity<ApiResponseDto<Order>> updateOrderStatus(
+      @PathVariable @Positive Integer orderId,
+      @RequestBody @Valid UpdateStatusOrderRequest request) {
+    try {
+      request.setOrderId(orderId);
+      Order updatedOrder = orderService.updateOrderStatus(request);
+      ApiResponseDto<Order> response =
+          ApiResponseDto.<Order>builder()
+              .status(HttpStatus.OK.value())
+              .message("Order status updated successfully")
+              .data(updatedOrder)
+              .build();
+      return ResponseEntity.ok(response);
+    } catch (IllegalStateException | IllegalArgumentException ex) {
+      ApiResponseDto<Order> response =
+          ApiResponseDto.<Order>builder()
+              .status(HttpStatus.BAD_REQUEST.value())
+              .message(ex.getMessage())
+              .build();
+      return ResponseEntity.badRequest().body(response);
     }
   }
 }

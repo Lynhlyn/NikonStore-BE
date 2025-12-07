@@ -34,6 +34,8 @@ public interface ReviewMapper {
   void updateEntityFromDto(ReviewUpdateDTO dto, @MappingTarget Review entity);
 
   @Mapping(target = "productId", source = "product.id")
+  @Mapping(target = "orderDetailId", source = "orderDetail.id")
+  @Mapping(target = "orderId", expression = "java(getOrderId(entity))")
   @Mapping(target = "reviewImages", expression = "java(mapReviewImages(entity.getReviewImages()))")
   ReviewResponseDTO toDto(Review entity);
 
@@ -49,6 +51,13 @@ public interface ReviewMapper {
     OrderDetail orderDetail = new OrderDetail();
     orderDetail.setId(id);
     return orderDetail;
+  }
+
+  default Integer getOrderId(Review review) {
+    if (review == null || review.getOrderDetail() == null || review.getOrderDetail().getOrder() == null) {
+      return null;
+    }
+    return review.getOrderDetail().getOrder().getId();
   }
 
   default List<ReviewImageResponseDTO> mapReviewImages(List<ReviewImage> images) {
