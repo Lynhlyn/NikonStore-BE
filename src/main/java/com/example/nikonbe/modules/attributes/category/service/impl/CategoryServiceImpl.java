@@ -10,6 +10,10 @@ import com.example.nikonbe.modules.attributes.category.entity.Category;
 import com.example.nikonbe.modules.attributes.category.mapper.CategoryMapper;
 import com.example.nikonbe.modules.attributes.category.repository.CategoryRepository;
 import com.example.nikonbe.modules.attributes.category.service.interF.CategoryService;
+import com.example.nikonbe.modules.product.entity.Product;
+import com.example.nikonbe.modules.product.repository.ProductRepository;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,8 @@ public class CategoryServiceImpl implements CategoryService {
 
   private final CategoryRepository categoryRepository;
   private final CategoryMapper categoryMapper;
+  private final ProductRepository productRepository;
+  private final ProductDetailRepository productDetailRepository;
 
   @Transactional
   @Override
@@ -95,6 +101,23 @@ public class CategoryServiceImpl implements CategoryService {
 
     categoryMapper.updateEntityFromDto(dto, category);
     Category updated = categoryRepository.save(category);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<Product> products =
+          productRepository.findAllWithFilters(null, Status.ACTIVE, id, null, null, null, Pageable.unpaged())
+              .getContent();
+      for (Product product : products) {
+        product.setStatus(dto.getStatus());
+        productRepository.save(product);
+        
+        List<ProductDetail> productDetails =
+            productDetailRepository.findByProductIdAndStatus(product.getId(), Status.ACTIVE);
+        for (ProductDetail detail : productDetails) {
+          detail.setStatus(dto.getStatus());
+          productDetailRepository.save(detail);
+        }
+      }
+    }
 
     return categoryMapper.toDto(updated);
   }

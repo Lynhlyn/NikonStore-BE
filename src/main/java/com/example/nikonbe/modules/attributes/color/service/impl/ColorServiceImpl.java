@@ -10,6 +10,8 @@ import com.example.nikonbe.modules.attributes.color.entity.Color;
 import com.example.nikonbe.modules.attributes.color.mapper.ColorMapper;
 import com.example.nikonbe.modules.attributes.color.repository.ColorRepository;
 import com.example.nikonbe.modules.attributes.color.service.interF.ColorService;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ColorServiceImpl implements ColorService {
   private final ColorRepository colorRepository;
   private final ColorMapper colorMapper;
+  private final ProductDetailRepository productDetailRepository;
 
   @Transactional
   @Override
@@ -49,6 +52,16 @@ public class ColorServiceImpl implements ColorService {
 
     colorMapper.updateEntityFromDto(dto, color);
     Color updatedColor = colorRepository.save(color);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<ProductDetail> productDetails =
+          productDetailRepository.findAllWithFilters(null, Status.ACTIVE, null, id, null, Pageable.unpaged())
+              .getContent();
+      for (ProductDetail detail : productDetails) {
+        detail.setStatus(dto.getStatus());
+        productDetailRepository.save(detail);
+      }
+    }
 
     return colorMapper.toDto(updatedColor);
   }

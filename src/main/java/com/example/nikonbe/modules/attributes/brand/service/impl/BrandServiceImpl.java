@@ -10,6 +10,10 @@ import com.example.nikonbe.modules.attributes.brand.entity.Brand;
 import com.example.nikonbe.modules.attributes.brand.mapper.BrandMapper;
 import com.example.nikonbe.modules.attributes.brand.repository.BrandRepository;
 import com.example.nikonbe.modules.attributes.brand.service.interF.BrandService;
+import com.example.nikonbe.modules.product.entity.Product;
+import com.example.nikonbe.modules.product.repository.ProductRepository;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,8 @@ public class BrandServiceImpl implements BrandService {
 
   private final BrandRepository brandRepository;
   private final BrandMapper brandMapper;
+  private final ProductRepository productRepository;
+  private final ProductDetailRepository productDetailRepository;
 
   @Transactional
   @Override
@@ -80,6 +86,23 @@ public class BrandServiceImpl implements BrandService {
 
     brandMapper.updateEntityFromDto(dto, brand);
     Brand updatedBrand = brandRepository.save(brand);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<Product> products =
+          productRepository.findAllWithFilters(null, Status.ACTIVE, null, id, null, null, Pageable.unpaged())
+              .getContent();
+      for (Product product : products) {
+        product.setStatus(dto.getStatus());
+        productRepository.save(product);
+        
+        List<ProductDetail> productDetails =
+            productDetailRepository.findByProductIdAndStatus(product.getId(), Status.ACTIVE);
+        for (ProductDetail detail : productDetails) {
+          detail.setStatus(dto.getStatus());
+          productDetailRepository.save(detail);
+        }
+      }
+    }
 
     return brandMapper.toDto(updatedBrand);
   }

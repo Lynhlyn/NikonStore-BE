@@ -114,8 +114,20 @@ public class ProductServiceImpl implements ProductService {
       throw new ResourceAlreadyExistsException(
           "Product với tên '" + dto.getName() + "' đã tồn tại");
     }
+    
+    Status oldStatus = entity.getStatus();
     mapper.updateEntityFromDto(dto, entity);
     Product updated = repository.save(entity);
+    
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<ProductDetail> productDetails =
+          productDetailRepository.findByProductIdAndStatus(updated.getId(), Status.ACTIVE);
+      for (ProductDetail detail : productDetails) {
+        detail.setStatus(dto.getStatus());
+        productDetailRepository.save(detail);
+      }
+    }
+    
     Product updatedWithRelationships =
         repository
             .findByIdWithRelationships(updated.getId())

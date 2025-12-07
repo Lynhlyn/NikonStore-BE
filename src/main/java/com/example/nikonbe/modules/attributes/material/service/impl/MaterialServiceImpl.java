@@ -10,6 +10,10 @@ import com.example.nikonbe.modules.attributes.material.entity.Material;
 import com.example.nikonbe.modules.attributes.material.mapper.MaterialMapper;
 import com.example.nikonbe.modules.attributes.material.repository.MaterialRepository;
 import com.example.nikonbe.modules.attributes.material.service.interF.MaterialService;
+import com.example.nikonbe.modules.product.entity.Product;
+import com.example.nikonbe.modules.product.repository.ProductRepository;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,8 @@ public class MaterialServiceImpl implements MaterialService {
 
   private final MaterialRepository materialRepository;
   private final MaterialMapper materialMapper;
+  private final ProductRepository productRepository;
+  private final ProductDetailRepository productDetailRepository;
 
   @Transactional
   @Override
@@ -70,6 +76,23 @@ public class MaterialServiceImpl implements MaterialService {
 
     materialMapper.updateEntityFromDto(dto, material);
     Material updated = materialRepository.save(material);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<Product> products =
+          productRepository.findAllWithFilters(null, Status.ACTIVE, null, null, id, null, Pageable.unpaged())
+              .getContent();
+      for (Product product : products) {
+        product.setStatus(dto.getStatus());
+        productRepository.save(product);
+        
+        List<ProductDetail> productDetails =
+            productDetailRepository.findByProductIdAndStatus(product.getId(), Status.ACTIVE);
+        for (ProductDetail detail : productDetails) {
+          detail.setStatus(dto.getStatus());
+          productDetailRepository.save(detail);
+        }
+      }
+    }
 
     return materialMapper.toDto(updated);
   }

@@ -10,6 +10,10 @@ import com.example.nikonbe.modules.attributes.strape_type.entity.StrapType;
 import com.example.nikonbe.modules.attributes.strape_type.mapper.StrapTypeMapper;
 import com.example.nikonbe.modules.attributes.strape_type.repository.StrapTypeRepository;
 import com.example.nikonbe.modules.attributes.strape_type.service.interF.StrapTypeService;
+import com.example.nikonbe.modules.product.entity.Product;
+import com.example.nikonbe.modules.product.repository.ProductRepository;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,8 @@ public class StrapTypeServiceImpl implements StrapTypeService {
 
   private final StrapTypeRepository strapTypeRepository;
   private final StrapTypeMapper strapTypeMapper;
+  private final ProductRepository productRepository;
+  private final ProductDetailRepository productDetailRepository;
 
   @Transactional
   @Override
@@ -74,6 +80,23 @@ public class StrapTypeServiceImpl implements StrapTypeService {
 
     strapTypeMapper.updateEntityFromDto(dto, strapType);
     StrapType updated = strapTypeRepository.save(strapType);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<Product> products =
+          productRepository.findAllWithFilters(null, Status.ACTIVE, null, null, null, id, Pageable.unpaged())
+              .getContent();
+      for (Product product : products) {
+        product.setStatus(dto.getStatus());
+        productRepository.save(product);
+        
+        List<ProductDetail> productDetails =
+            productDetailRepository.findByProductIdAndStatus(product.getId(), Status.ACTIVE);
+        for (ProductDetail detail : productDetails) {
+          detail.setStatus(dto.getStatus());
+          productDetailRepository.save(detail);
+        }
+      }
+    }
 
     return strapTypeMapper.toDto(updated);
   }

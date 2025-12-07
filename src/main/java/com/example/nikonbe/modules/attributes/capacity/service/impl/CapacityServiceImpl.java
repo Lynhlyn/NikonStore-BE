@@ -10,6 +10,8 @@ import com.example.nikonbe.modules.attributes.capacity.entity.Capacity;
 import com.example.nikonbe.modules.attributes.capacity.mapper.CapacityMapper;
 import com.example.nikonbe.modules.attributes.capacity.repository.CapacityRepository;
 import com.example.nikonbe.modules.attributes.capacity.service.interF.CapacityService;
+import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
+import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,7 @@ public class CapacityServiceImpl implements CapacityService {
 
   private final CapacityRepository capacityRepository;
   private final CapacityMapper capacityMapper;
+  private final ProductDetailRepository productDetailRepository;
 
   @Transactional
   @Override
@@ -70,6 +73,16 @@ public class CapacityServiceImpl implements CapacityService {
 
     capacityMapper.updateEntityFromDto(dto, capacity);
     Capacity updated = capacityRepository.save(capacity);
+
+    if (dto.getStatus() == Status.INACTIVE || dto.getStatus() == Status.DELETED) {
+      List<ProductDetail> productDetails =
+          productDetailRepository.findAllWithFilters(null, Status.ACTIVE, null, null, id, Pageable.unpaged())
+              .getContent();
+      for (ProductDetail detail : productDetails) {
+        detail.setStatus(dto.getStatus());
+        productDetailRepository.save(detail);
+      }
+    }
 
     return capacityMapper.toDto(updated);
   }
