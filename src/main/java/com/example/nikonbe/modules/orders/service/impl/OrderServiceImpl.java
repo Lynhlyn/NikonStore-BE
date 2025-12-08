@@ -383,14 +383,13 @@ public class OrderServiceImpl implements OrderService {
     Integer cartId = getCartId(request, customer);
     List<OrderDetail> orderDetails = new ArrayList<>();
     BigDecimal totalAmount = calculateOrderDetails(request, cartId, orderDetails);
-    BigDecimal finalAmount =
-        calculateFinalAmount(totalAmount, request.getDiscount(), request.getShippingFee());
 
     Order savedOrder = createAndSaveOrder(customer, totalAmount, request);
     String paymentUrl = null;
 
+    Voucher voucher = null;
     if (request.getVoucherId() != null) {
-      Voucher voucher = voucherRepository.findById(request.getVoucherId()).orElse(null);
+      voucher = voucherRepository.findById(request.getVoucherId()).orElse(null);
       if (voucher != null) {
         savedOrder.setVoucher(voucher);
       }
@@ -398,6 +397,18 @@ public class OrderServiceImpl implements OrderService {
 
     saveOrderDetailsBatch(orderDetails, savedOrder);
     removeItemsFromCartBatch(request.getCartItems());
+
+    BigDecimal voucherDiscount = BigDecimal.ZERO;
+    if (voucher != null) {
+      voucherDiscount = calculateVoucherDiscount(totalAmount, voucher);
+      savedOrder.setDiscount(voucherDiscount);
+    } else if (request.getDiscount() != null) {
+      savedOrder.setDiscount(request.getDiscount());
+      voucherDiscount = request.getDiscount();
+    }
+
+    BigDecimal finalAmount =
+        calculateFinalAmount(totalAmount, voucherDiscount, request.getShippingFee());
 
     if ("VNPAY".equalsIgnoreCase(request.getPaymentMethod())) {
       savedOrder.setStatus(Status.PENDING_PAYMENT);
@@ -461,13 +472,12 @@ public class OrderServiceImpl implements OrderService {
     Customer customer = validateAndGetCustomer(request.getCustomerId(), request.getCookieId());
     List<OrderDetail> orderDetails = new ArrayList<>();
     BigDecimal totalAmount = calculateInstantOrderDetails(request, orderDetails);
-    BigDecimal finalAmount =
-        calculateFinalAmount(totalAmount, request.getDiscount(), request.getShippingFee());
 
     Order savedOrder = createAndSaveInstantOrder(customer, totalAmount, request);
 
+    Voucher voucher = null;
     if (request.getVoucherId() != null) {
-      Voucher voucher = voucherRepository.findById(request.getVoucherId()).orElse(null);
+      voucher = voucherRepository.findById(request.getVoucherId()).orElse(null);
       if (voucher != null) {
         savedOrder.setVoucher(voucher);
       }
@@ -475,6 +485,18 @@ public class OrderServiceImpl implements OrderService {
 
     saveOrderDetailsBatch(orderDetails, savedOrder);
     String paymentUrl = null;
+
+    BigDecimal voucherDiscount = BigDecimal.ZERO;
+    if (voucher != null) {
+      voucherDiscount = calculateVoucherDiscount(totalAmount, voucher);
+      savedOrder.setDiscount(voucherDiscount);
+    } else if (request.getDiscount() != null) {
+      savedOrder.setDiscount(request.getDiscount());
+      voucherDiscount = request.getDiscount();
+    }
+
+    BigDecimal finalAmount =
+        calculateFinalAmount(totalAmount, voucherDiscount, request.getShippingFee());
 
     if ("VNPAY".equalsIgnoreCase(request.getPaymentMethod())) {
       savedOrder.setStatus(Status.PENDING_PAYMENT);
@@ -783,6 +805,37 @@ public class OrderServiceImpl implements OrderService {
 
     BigDecimal finalAmount = totalAmount.subtract(voucherdiscount).add(finalShippingFee);
     return finalAmount.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : finalAmount;
+  }
+
+  private BigDecimal calculateVoucherDiscount(BigDecimal subtotal, Voucher voucher) {
+    if (voucher == null) return BigDecimal.ZERO;
+
+    LocalDateTime now = LocalDateTime.now();
+    if (voucher.getStartDate().isAfter(now)
+        || voucher.getEndDate().isBefore(now)
+        || voucher.getStatus() != Status.ACTIVE) {
+      return BigDecimal.ZERO;
+    }
+
+    if (voucher.getMinOrderValue() != null && subtotal.compareTo(voucher.getMinOrderValue()) < 0) {
+      return BigDecimal.ZERO;
+    }
+
+    BigDecimal discount;
+    if ("percentage".equals(voucher.getDiscountType())) {
+      discount =
+          subtotal
+              .multiply(voucher.getDiscountValue())
+              .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+
+      if (voucher.getMaxDiscount() != null && discount.compareTo(voucher.getMaxDiscount()) > 0) {
+        discount = voucher.getMaxDiscount();
+      }
+    } else {
+      discount = voucher.getDiscountValue();
+    }
+
+    return discount.min(subtotal);
   }
 
   private Order createAndSaveOrder(

@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -76,6 +77,15 @@ public class PosServiceImpl implements PosService {
   private final OrderServiceImpl orderServiceImpl;
   private final OrderDetailRepository orderDetailRepository;
   private final VNPayService vnPayService;
+
+  @Value("${api.admin.version:v1}")
+  private String apiAdminVersion;
+
+  @Value("${server.port:8080}")
+  private String serverPort;
+
+  @Value("${api.server.url:http://localhost:8080}")
+  private String apiServerUrl;
 
   @Override
   public Page<ProductDetailPosResponse> getProductDetailsByProductId(
@@ -1069,8 +1079,9 @@ public class PosServiceImpl implements PosService {
     String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
     String orderIdStr = order.getTrackingNumber();
 
+    String adminReturnUrl = apiServerUrl + "/api/" + apiAdminVersion + "/pos/vnpay/callback";
     long amountInVnd = totalAmount.longValue();
-    String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr);
+    String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr, adminReturnUrl);
 
     order.setPaymentMethod("VNPAY-QR");
     order.setPaymentStatus("PENDING");
@@ -1111,8 +1122,9 @@ public class PosServiceImpl implements PosService {
     String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
     String orderIdStr = order.getTrackingNumber();
 
+    String adminReturnUrl = apiServerUrl + "/api/" + apiAdminVersion + "/pos/vnpay/callback";
     long amountInVnd = totalAmount.longValue();
-    String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr);
+    String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr, adminReturnUrl);
     String qrCodeUrl = vnPayService.generateQrCode(paymentUrl);
 
     order.setPaymentMethod("VNPAY-QR");

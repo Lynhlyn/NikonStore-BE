@@ -67,6 +67,11 @@ public class VNPayServiceImpl implements VNPayService {
 
   @Override
   public String createPaymentUrl(long amount, String orderInfo, String ipAddr, String orderId) {
+    return createPaymentUrl(amount, orderInfo, ipAddr, orderId, config.getReturnUrl());
+  }
+
+  @Override
+  public String createPaymentUrl(long amount, String orderInfo, String ipAddr, String orderId, String returnUrl) {
     if (config.getTmnCode() == null || config.getTmnCode().trim().isEmpty()) {
       log.error("VNPAY_TMN_CODE chưa được cấu hình. Không thể tạo payment URL.");
       throw new IllegalStateException("VNPAY_TMN_CODE chưa được cấu hình");
@@ -85,7 +90,7 @@ public class VNPayServiceImpl implements VNPayService {
     vnpParams.put("vnp_OrderInfo", orderInfo);
     vnpParams.put("vnp_OrderType", "other");
     vnpParams.put("vnp_Locale", "vn");
-    vnpParams.put("vnp_ReturnUrl", config.getReturnUrl());
+    vnpParams.put("vnp_ReturnUrl", returnUrl != null ? returnUrl : config.getReturnUrl());
     vnpParams.put("vnp_IpAddr", ipAddr);
     vnpParams.put("vnp_CreateDate", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 

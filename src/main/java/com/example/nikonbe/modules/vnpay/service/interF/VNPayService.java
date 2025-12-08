@@ -6,6 +6,8 @@ public interface VNPayService {
 
   String createPaymentUrl(long amount, String orderInfo, String ipAddr, String orderId);
 
+  String createPaymentUrl(long amount, String orderInfo, String ipAddr, String orderId, String returnUrl);
+
   boolean verifyReturn(Map<String, String> params);
 
   String generateQrCode(String paymentUrl);
