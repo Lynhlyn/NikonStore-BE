@@ -448,6 +448,14 @@ public class PosServiceImpl implements PosService {
 
     recalculateOrderAmounts(order);
 
+    log.debug(
+        "Validating payment - OrderId: {}, TotalAmount: {}, AmountPaid: {}, ChangeAmount: {}, VoucherId: {}",
+        orderId,
+        order.getTotalAmount(),
+        request.getAmountPaid(),
+        request.getChangeAmount(),
+        request.getVoucherId());
+
     validatePaymentAmount(
         order.getTotalAmount(), request.getAmountPaid(), request.getChangeAmount());
 
@@ -751,13 +759,27 @@ public class PosServiceImpl implements PosService {
 
   private void validatePaymentAmount(
       BigDecimal totalAmount, BigDecimal amountPaid, BigDecimal changeAmount) {
-    if (amountPaid.compareTo(totalAmount) < 0) {
+    BigDecimal normalizedTotalAmount = totalAmount.setScale(0, RoundingMode.HALF_UP);
+    BigDecimal normalizedAmountPaid = amountPaid.setScale(0, RoundingMode.HALF_UP);
+    
+    if (normalizedAmountPaid.compareTo(normalizedTotalAmount) < 0) {
       throw new IllegalArgumentException("Số tiền thanh toán không đủ");
     }
 
-    BigDecimal expectedChange = amountPaid.subtract(totalAmount);
-    if (changeAmount != null && changeAmount.compareTo(expectedChange) != 0) {
-      throw new IllegalArgumentException("Số tiền thừa không chính xác");
+    BigDecimal expectedChange = normalizedAmountPaid.subtract(normalizedTotalAmount);
+    
+    if (changeAmount != null) {
+      BigDecimal normalizedChangeAmount = changeAmount.setScale(0, RoundingMode.HALF_UP);
+      BigDecimal normalizedExpectedChange = expectedChange.setScale(0, RoundingMode.HALF_UP);
+      
+      if (normalizedChangeAmount.compareTo(normalizedExpectedChange) != 0) {
+        log.warn(
+            "ChangeAmount mismatch (frontend may use old totalAmount) - TotalAmount: {}, AmountPaid: {}, ChangeAmount (from frontend): {}, ExpectedChange (calculated): {}. Using calculated value.",
+            normalizedTotalAmount,
+            normalizedAmountPaid,
+            normalizedChangeAmount,
+            normalizedExpectedChange);
+      }
     }
   }
 
