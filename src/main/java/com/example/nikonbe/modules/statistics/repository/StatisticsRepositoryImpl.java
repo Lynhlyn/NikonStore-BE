@@ -6,6 +6,7 @@ import com.example.nikonbe.modules.statistics.dto.response.OrderStatisticsRespon
 import com.example.nikonbe.modules.statistics.dto.response.ProductStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.RevenueStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.SalesChannelStatisticsResponse;
+import com.example.nikonbe.modules.statistics.dto.response.TopCustomerStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.VoucherStatisticsResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -38,12 +39,12 @@ public class StatisticsRepositoryImpl implements StatisticsRepository {
                                         com.example.nikonbe.common.enums.Status.CONFIRMED,
                                         com.example.nikonbe.common.enums.Status.PREPARING,
                                         com.example.nikonbe.common.enums.Status.SHIPPING) THEN 1 END) as pendingOrders,
-            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as totalRevenue,
-            COALESCE(CAST(AVG(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount END) AS java.math.BigDecimal), 0) as averageOrderValue,
+            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as totalRevenue,
+            COALESCE(CAST(AVG(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) END) AS java.math.BigDecimal), 0) as averageOrderValue,
             COUNT(CASE WHEN o.orderType IN ('ONLINE', 'online') THEN 1 END) as onlineOrders,
             COUNT(CASE WHEN o.orderType = 'IN_STORE' THEN 1 END) as posOrders,
-            COALESCE(SUM(CASE WHEN o.orderType IN ('ONLINE', 'online') AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as onlineRevenue,
-            COALESCE(SUM(CASE WHEN o.orderType = 'IN_STORE' AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as posRevenue
+            COALESCE(SUM(CASE WHEN o.orderType IN ('ONLINE', 'online') AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as onlineRevenue,
+            COALESCE(SUM(CASE WHEN o.orderType = 'IN_STORE' AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as posRevenue
         )
         FROM Order o
         WHERE (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
@@ -124,9 +125,11 @@ public class StatisticsRepositoryImpl implements StatisticsRepository {
         SELECT new com.example.nikonbe.modules.statistics.dto.response.RevenueStatisticsResponse(
             DATE(o.createdAt) as date,
             COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as dailyRevenue,
+            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.shippingFee ELSE 0 END), 0) as shippingFee,
+            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as netRevenue,
             COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) as dailyOrders,
-            COALESCE(SUM(CASE WHEN o.orderType IN ('ONLINE', 'online') AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as onlineRevenue,
-            COALESCE(SUM(CASE WHEN o.orderType = 'IN_STORE' AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as posRevenue,
+            COALESCE(SUM(CASE WHEN o.orderType IN ('ONLINE', 'online') AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as onlineRevenue,
+            COALESCE(SUM(CASE WHEN o.orderType = 'IN_STORE' AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as posRevenue,
             COUNT(CASE WHEN o.orderType IN ('ONLINE', 'online') AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) as onlineOrders,
             COUNT(CASE WHEN o.orderType = 'IN_STORE' AND o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) as posOrders
         )
@@ -193,8 +196,8 @@ public class StatisticsRepositoryImpl implements StatisticsRepository {
                 ELSE o.orderType
             END as channel,
             COUNT(o.id) as totalOrders,
-            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) as totalRevenue,
-            COALESCE(CAST(AVG(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount END) AS java.math.BigDecimal), 0) as averageOrderValue,
+            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as totalRevenue,
+            COALESCE(CAST(AVG(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) END) AS java.math.BigDecimal), 0) as averageOrderValue,
             COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) as completedOrders,
             COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.CANCELLED THEN 1 END) as cancelledOrders,
             CASE
@@ -204,7 +207,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepository {
             END as completionRate,
             CASE
                 WHEN :totalRevenue > 0 THEN
-                    (COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN o.totalAmount ELSE 0 END), 0) * 100.0 / :totalRevenue)
+                    (COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) * 100.0 / :totalRevenue)
                 ELSE 0.0
             END as revenuePercentage
         )
@@ -256,7 +259,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepository {
       LocalDate fromDate, LocalDate toDate, Integer year, Integer month) {
     String jpql =
         """
-        SELECT COALESCE(SUM(o.totalAmount), 0)
+        SELECT COALESCE(SUM(o.totalAmount - COALESCE(o.shippingFee, 0)), 0)
         FROM Order o
         WHERE o.status = com.example.nikonbe.common.enums.Status.COMPLETED
         AND (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
@@ -387,6 +390,97 @@ public class StatisticsRepositoryImpl implements StatisticsRepository {
     query.setParameter("month", month);
 
     return (java.math.BigDecimal) query.getSingleResult();
+  }
+
+  @Override
+  public java.math.BigDecimal getTotalShippingFee(
+      LocalDate fromDate, LocalDate toDate, Integer year, Integer month) {
+    String jpql =
+        """
+        SELECT COALESCE(SUM(o.shippingFee), 0)
+        FROM Order o
+        WHERE o.status = com.example.nikonbe.common.enums.Status.COMPLETED
+        AND (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
+        AND (:toDate IS NULL OR DATE(o.createdAt) <= :toDate)
+        AND (:year IS NULL OR YEAR(o.createdAt) = :year)
+        AND (:month IS NULL OR MONTH(o.createdAt) = :month)
+        """;
+
+    Query query = entityManager.createQuery(jpql);
+    query.setParameter("fromDate", fromDate);
+    query.setParameter("toDate", toDate);
+    query.setParameter("year", year);
+    query.setParameter("month", month);
+
+    return (java.math.BigDecimal) query.getSingleResult();
+  }
+
+  public List<TopCustomerStatisticsResponse> getTopCustomersByCompletedOrders(
+      LocalDate fromDate, LocalDate toDate, Integer year, Integer month, int limit) {
+    String jpql =
+        """
+        SELECT new com.example.nikonbe.modules.statistics.dto.response.TopCustomerStatisticsResponse(
+            c.id as customerId,
+            c.fullName as customerName,
+            c.email as email,
+            c.phoneNumber as phoneNumber,
+            COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) as completedOrdersCount,
+            COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.CANCELLED THEN 1 END) as cancelledOrdersCount,
+            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as totalSpent
+        )
+        FROM Customer c
+        INNER JOIN Order o ON o.customer.id = c.id
+        WHERE (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
+        AND (:toDate IS NULL OR DATE(o.createdAt) <= :toDate)
+        AND (:year IS NULL OR YEAR(o.createdAt) = :year)
+        AND (:month IS NULL OR MONTH(o.createdAt) = :month)
+        GROUP BY c.id, c.fullName, c.email, c.phoneNumber
+        HAVING COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) > 0
+        ORDER BY COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) DESC
+        """;
+
+    Query query = entityManager.createQuery(jpql);
+    query.setParameter("fromDate", fromDate);
+    query.setParameter("toDate", toDate);
+    query.setParameter("year", year);
+    query.setParameter("month", month);
+    query.setMaxResults(limit);
+
+    return query.getResultList();
+  }
+
+  public List<TopCustomerStatisticsResponse> getTopCustomersByCancelledOrders(
+      LocalDate fromDate, LocalDate toDate, Integer year, Integer month, int limit) {
+    String jpql =
+        """
+        SELECT new com.example.nikonbe.modules.statistics.dto.response.TopCustomerStatisticsResponse(
+            c.id as customerId,
+            c.fullName as customerName,
+            c.email as email,
+            c.phoneNumber as phoneNumber,
+            COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN 1 END) as completedOrdersCount,
+            COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.CANCELLED THEN 1 END) as cancelledOrdersCount,
+            COALESCE(SUM(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.COMPLETED THEN (o.totalAmount - COALESCE(o.shippingFee, 0)) ELSE 0 END), 0) as totalSpent
+        )
+        FROM Customer c
+        INNER JOIN Order o ON o.customer.id = c.id
+        WHERE (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
+        AND (:toDate IS NULL OR DATE(o.createdAt) <= :toDate)
+        AND (:year IS NULL OR YEAR(o.createdAt) = :year)
+        AND (:month IS NULL OR MONTH(o.createdAt) = :month)
+        GROUP BY c.id, c.fullName, c.email, c.phoneNumber
+        HAVING COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.CANCELLED THEN 1 END) > 0
+        ORDER BY COUNT(CASE WHEN o.status = com.example.nikonbe.common.enums.Status.CANCELLED THEN 1 END) DESC
+        """;
+
+    Query query = entityManager.createQuery(jpql);
+    query.setParameter("fromDate", fromDate);
+    query.setParameter("toDate", toDate);
+    query.setParameter("year", year);
+    query.setParameter("month", month);
+    query.setMaxResults(limit);
+
+    return query.getResultList();
   }
 }
 

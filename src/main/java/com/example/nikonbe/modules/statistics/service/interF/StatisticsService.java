@@ -7,6 +7,7 @@ import com.example.nikonbe.modules.statistics.dto.response.OrderStatisticsRespon
 import com.example.nikonbe.modules.statistics.dto.response.ProductStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.RevenueStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.SalesChannelStatisticsResponse;
+import com.example.nikonbe.modules.statistics.dto.response.TopCustomerStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.VoucherStatisticsResponse;
 import java.util.List;
 
@@ -37,5 +38,11 @@ public interface StatisticsService {
   List<VoucherStatisticsResponse> getVoucherStatistics(StatisticsFilterRequest filter);
 
   List<VoucherStatisticsResponse> getTopUsedVouchers(StatisticsFilterRequest filter, int limit);
+
+  List<TopCustomerStatisticsResponse> getTopCustomersByCompletedOrders(
+      StatisticsFilterRequest filter, int limit);
+
+  List<TopCustomerStatisticsResponse> getTopCustomersByCancelledOrders(
+      StatisticsFilterRequest filter, int limit);
 }
 

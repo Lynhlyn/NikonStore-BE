@@ -6,6 +6,7 @@ import com.example.nikonbe.modules.statistics.dto.response.OrderStatisticsRespon
 import com.example.nikonbe.modules.statistics.dto.response.ProductStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.RevenueStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.SalesChannelStatisticsResponse;
+import com.example.nikonbe.modules.statistics.dto.response.TopCustomerStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.VoucherStatisticsResponse;
 import java.time.LocalDate;
 import java.util.List;
@@ -274,6 +275,22 @@ public interface StatisticsRepository {
         AND (:month IS NULL OR MONTH(o.createdAt) = :month)
         """)
   java.math.BigDecimal getTotalDiscountAmount(
+      @Param("fromDate") LocalDate fromDate,
+      @Param("toDate") LocalDate toDate,
+      @Param("year") Integer year,
+      @Param("month") Integer month);
+
+  @Query(
+      """
+      SELECT COALESCE(SUM(o.shippingFee), 0)
+      FROM Order o
+      WHERE o.status = com.example.nikonbe.common.enums.Status.COMPLETED
+      AND (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
+      AND (:toDate IS NULL OR DATE(o.createdAt) <= :toDate)
+      AND (:year IS NULL OR YEAR(o.createdAt) = :year)
+      AND (:month IS NULL OR MONTH(o.createdAt) = :month)
+      """)
+  java.math.BigDecimal getTotalShippingFee(
       @Param("fromDate") LocalDate fromDate,
       @Param("toDate") LocalDate toDate,
       @Param("year") Integer year,

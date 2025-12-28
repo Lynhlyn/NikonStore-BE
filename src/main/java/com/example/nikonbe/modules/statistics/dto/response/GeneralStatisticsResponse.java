@@ -18,7 +18,10 @@ public class GeneralStatisticsResponse {
   private List<CustomerStatisticsResponse> customerGrowth;
   private List<SalesChannelStatisticsResponse> salesChannelComparison;
   private List<VoucherStatisticsResponse> voucherUsage;
+  private List<TopCustomerStatisticsResponse> topCustomersByCompletedOrders;
+  private List<TopCustomerStatisticsResponse> topCustomersByCancelledOrders;
   private BigDecimal totalRevenue;
+  private BigDecimal totalShippingFee;
   private Long totalOrders;
   private Long totalCustomers;
   private Long totalProducts;

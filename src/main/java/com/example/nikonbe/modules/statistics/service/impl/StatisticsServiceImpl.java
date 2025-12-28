@@ -7,8 +7,10 @@ import com.example.nikonbe.modules.statistics.dto.response.OrderStatisticsRespon
 import com.example.nikonbe.modules.statistics.dto.response.ProductStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.RevenueStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.SalesChannelStatisticsResponse;
+import com.example.nikonbe.modules.statistics.dto.response.TopCustomerStatisticsResponse;
 import com.example.nikonbe.modules.statistics.dto.response.VoucherStatisticsResponse;
 import com.example.nikonbe.modules.statistics.repository.StatisticsRepository;
+import com.example.nikonbe.modules.statistics.repository.StatisticsRepositoryImpl;
 import com.example.nikonbe.modules.statistics.service.interF.StatisticsService;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,9 +21,13 @@ import org.springframework.stereotype.Service;
 public class StatisticsServiceImpl implements StatisticsService {
 
   private final StatisticsRepository statisticsRepository;
+  private final StatisticsRepositoryImpl statisticsRepositoryImpl;
 
-  public StatisticsServiceImpl(StatisticsRepository statisticsRepository) {
+  public StatisticsServiceImpl(
+      StatisticsRepository statisticsRepository,
+      StatisticsRepositoryImpl statisticsRepositoryImpl) {
     this.statisticsRepository = statisticsRepository;
+    this.statisticsRepositoryImpl = statisticsRepositoryImpl;
   }
 
   @Override
@@ -103,6 +109,15 @@ public class StatisticsServiceImpl implements StatisticsService {
         statisticsRepository.getTotalDiscountAmount(
             filter.getFromDate(), filter.getToDate(), filter.getYear(), filter.getMonth());
 
+    java.math.BigDecimal totalShippingFee =
+        statisticsRepository.getTotalShippingFee(
+            filter.getFromDate(), filter.getToDate(), filter.getYear(), filter.getMonth());
+
+    List<TopCustomerStatisticsResponse> topCustomersByCompleted =
+        getTopCustomersByCompletedOrders(filter, 10);
+    List<TopCustomerStatisticsResponse> topCustomersByCancelled =
+        getTopCustomersByCancelledOrders(filter, 10);
+
     return GeneralStatisticsResponse.builder()
         .orderStatistics(orderStats)
         .topSellingProducts(topProducts)
@@ -110,7 +125,10 @@ public class StatisticsServiceImpl implements StatisticsService {
         .customerGrowth(customerStats)
         .salesChannelComparison(channelStats)
         .voucherUsage(voucherStats)
+        .topCustomersByCompletedOrders(topCustomersByCompleted)
+        .topCustomersByCancelledOrders(topCustomersByCancelled)
         .totalRevenue(totalRevenue)
+        .totalShippingFee(totalShippingFee)
         .totalOrders(totalOrders)
         .totalCustomers(totalCustomers)
         .totalProducts(totalProducts)
@@ -161,6 +179,28 @@ public class StatisticsServiceImpl implements StatisticsService {
   public List<VoucherStatisticsResponse> getTopUsedVouchers(
       StatisticsFilterRequest filter, int limit) {
     return getVoucherStatistics(filter).stream().limit(limit).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<TopCustomerStatisticsResponse> getTopCustomersByCompletedOrders(
+      StatisticsFilterRequest filter, int limit) {
+    return statisticsRepositoryImpl.getTopCustomersByCompletedOrders(
+        filter.getFromDate(),
+        filter.getToDate(),
+        filter.getYear(),
+        filter.getMonth(),
+        limit);
+  }
+
+  @Override
+  public List<TopCustomerStatisticsResponse> getTopCustomersByCancelledOrders(
+      StatisticsFilterRequest filter, int limit) {
+    return statisticsRepositoryImpl.getTopCustomersByCancelledOrders(
+        filter.getFromDate(),
+        filter.getToDate(),
+        filter.getYear(),
+        filter.getMonth(),
+        limit);
   }
 }
 

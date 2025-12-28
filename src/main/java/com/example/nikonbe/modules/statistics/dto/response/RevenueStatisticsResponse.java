@@ -10,9 +10,12 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class RevenueStatisticsResponse {
   private LocalDate date;
   private BigDecimal dailyRevenue;
+  private BigDecimal shippingFee;
+  private BigDecimal netRevenue;
   private Long dailyOrders;
   private BigDecimal onlineRevenue;
   private BigDecimal posRevenue;
@@ -22,6 +25,8 @@ public class RevenueStatisticsResponse {
   public RevenueStatisticsResponse(
       java.sql.Date date,
       BigDecimal dailyRevenue,
+      BigDecimal shippingFee,
+      BigDecimal netRevenue,
       Long dailyOrders,
       BigDecimal onlineRevenue,
       BigDecimal posRevenue,
@@ -29,23 +34,8 @@ public class RevenueStatisticsResponse {
       Long posOrders) {
     this.date = date != null ? date.toLocalDate() : null;
     this.dailyRevenue = dailyRevenue;
-    this.dailyOrders = dailyOrders;
-    this.onlineRevenue = onlineRevenue;
-    this.posRevenue = posRevenue;
-    this.onlineOrders = onlineOrders;
-    this.posOrders = posOrders;
-  }
-
-  public RevenueStatisticsResponse(
-      LocalDate date,
-      BigDecimal dailyRevenue,
-      Long dailyOrders,
-      BigDecimal onlineRevenue,
-      BigDecimal posRevenue,
-      Long onlineOrders,
-      Long posOrders) {
-    this.date = date;
-    this.dailyRevenue = dailyRevenue;
+    this.shippingFee = shippingFee;
+    this.netRevenue = netRevenue;
     this.dailyOrders = dailyOrders;
     this.onlineRevenue = onlineRevenue;
     this.posRevenue = posRevenue;
