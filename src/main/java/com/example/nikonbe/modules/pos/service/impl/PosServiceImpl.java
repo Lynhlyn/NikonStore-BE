@@ -394,6 +394,8 @@ public class PosServiceImpl implements PosService {
     }
 
     try {
+      Status statusBefore = order.getStatus();
+
       updateBasicOrderInfo(order, request);
 
       if (request.getOrderDetails() != null) {
@@ -403,16 +405,19 @@ public class PosServiceImpl implements PosService {
       recalculateOrderAmounts(order);
 
       Order savedOrder = orderRepository.save(order);
+      Status statusAfter = savedOrder.getStatus();
 
-      OrderHistory orderHistory =
-          orderServiceImpl.createOrderHistory(
-              savedOrder,
-              savedOrder.getStaff().getId(),
-              null,
-              Status.PENDING_PAYMENT,
-              Status.PENDING_PAYMENT,
-              "Cập nhật đơn hàng POS");
-      orderHistoryRepository.save(orderHistory);
+      if (!statusBefore.equals(statusAfter)) {
+        OrderHistory orderHistory =
+            orderServiceImpl.createOrderHistory(
+                savedOrder,
+                savedOrder.getStaff().getId(),
+                null,
+                statusBefore,
+                statusAfter,
+                "Cập nhật đơn hàng POS");
+        orderHistoryRepository.save(orderHistory);
+      }
 
       log.info("Successfully updated POS order ID: {}", orderId);
       return mapToPosOrderResponse(savedOrder);
@@ -1277,32 +1282,27 @@ public class PosServiceImpl implements PosService {
     List<Order> oldPendingOrders =
         orderRepository.findOldPendingOrders(Status.PENDING_PAYMENT, "IN_STORE", cutoffTime);
 
-    int deletedCount = 0;
-    int cancelledCount = 0;
+    int processedCount = 0;
+    int errorCount = 0;
 
     for (Order order : oldPendingOrders) {
       try {
         if (order.getId() == null) {
           log.warn("Skipping order with null ID: {}", order.getTrackingNumber());
+          errorCount++;
           continue;
         }
-
-        boolean hasProducts = order.getOrderDetails() != null && !order.getOrderDetails().isEmpty();
 
         Integer staffId = order.getStaff() != null ? order.getStaff().getId() : 1;
         String cancelReason = "Hủy tự động do quá hạn 1 tiếng chờ thanh toán";
 
         cancelPendingOrder(order.getId(), staffId, cancelReason);
-
-        if (!hasProducts) {
-          deletedCount++;
-        } else {
-          cancelledCount++;
-        }
+        processedCount++;
 
         log.info("Processed old pending order: {}", order.getTrackingNumber());
 
       } catch (Exception e) {
+        errorCount++;
         log.error(
             "Error processing order {}: {}",
             order.getId() != null ? order.getId() : "null",
@@ -1312,10 +1312,10 @@ public class PosServiceImpl implements PosService {
 
     if (!oldPendingOrders.isEmpty()) {
       log.info(
-          "Processed {} old pending IN_STORE orders: Deleted: {}, Cancelled: {}",
+          "Processed {} old pending IN_STORE orders: Success: {}, Errors: {}",
           oldPendingOrders.size(),
-          deletedCount,
-          cancelledCount);
+          processedCount,
+          errorCount);
     }
   }
 }

@@ -2,6 +2,7 @@ package com.example.nikonbe.api.admin.orders;
 
 import com.example.nikonbe.common.response.ApiResponseDto;
 import com.example.nikonbe.common.response.PaginationResponse;
+import com.example.nikonbe.common.utils.JWTUtil;
 import com.example.nikonbe.modules.orders.dto.request.CancelOrderRequest;
 import com.example.nikonbe.modules.orders.dto.request.UpdateStatusOrderRequest;
 import com.example.nikonbe.modules.orders.dto.response.GetOrderDetailResponse;
@@ -11,6 +12,7 @@ import com.example.nikonbe.modules.orders.entity.Order;
 import com.example.nikonbe.modules.orders.service.impl.OrderExcelExportService;
 import com.example.nikonbe.modules.orders.service.interF.OrderService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderAdminController {
   @Autowired private OrderService orderService;
   @Autowired private OrderExcelExportService orderExcelExportService;
+  private final JWTUtil jwtUtil;
 
   @GetMapping("/all")
   public ResponseEntity<ApiResponseDto<Iterable<OrderAllResponse>>> getAllOrders(
@@ -109,8 +112,13 @@ public class OrderAdminController {
 
   @PutMapping("/status")
   public ResponseEntity<ApiResponseDto<Order>> updateOrderStatus(
-      @RequestBody UpdateStatusOrderRequest request) {
+      @RequestBody UpdateStatusOrderRequest request,
+      HttpServletRequest httpRequest) {
     try {
+      Integer staffId = extractStaffIdFromRequest(httpRequest);
+      if (staffId != null && request.getStaffId() == null) {
+        request.setStaffId(staffId);
+      }
       orderService.updateOrderStatus(request);
       return ResponseEntity.ok(
           ApiResponseDto.<Order>builder()
@@ -121,6 +129,19 @@ public class OrderAdminController {
       return ResponseEntity.badRequest()
           .body(ApiResponseDto.<Order>builder().status(400).message(ex.getMessage()).build());
     }
+  }
+
+  private Integer extractStaffIdFromRequest(HttpServletRequest request) {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+      String token = authHeader.substring(7);
+      try {
+        return jwtUtil.extractUserId(token);
+      } catch (Exception e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   @GetMapping("/export/excel")
