@@ -181,7 +181,7 @@ public interface StatisticsRepository {
 
   @Query(
       """
-        SELECT COALESCE(SUM(o.totalAmount), 0)
+        SELECT COALESCE(SUM(o.totalAmount - COALESCE(o.shippingFee, 0) - COALESCE(o.discount, 0)), 0)
         FROM Order o
         WHERE o.status = com.example.nikonbe.common.enums.Status.COMPLETED
         AND (:fromDate IS NULL OR DATE(o.createdAt) >= :fromDate)
