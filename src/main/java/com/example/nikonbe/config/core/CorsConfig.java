@@ -21,8 +21,8 @@ public class CorsConfig {
   private static final String[] DEPLOYMENT_ORIGINS = {
     "https://nikon-store-gamma.vercel.app",
     "https://nikon-store-gamma-dev.vercel.app",
-    "https://*.trycloudflare.com",
-    "https://hide-cons-bailey-ages.trycloudflare.com"
+    "https://hide-cons-bailey-ages.trycloudflare.com",
+    "https://pdas-lenders-orchestra-transmitted.trycloudflare.com"
   };
 
   private static final String[] DYNAMIC_PATTERNS = {

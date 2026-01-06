@@ -87,6 +87,9 @@ public class PosServiceImpl implements PosService {
   @Value("${api.server.url:http://localhost:8080}")
   private String apiServerUrl;
 
+  @Value("${api.frontendAdmin.url:http://localhost:3001}")
+  private String frontendAdminUrl;
+
   @Override
   public Page<ProductDetailPosResponse> getProductDetailsByProductId(
       Integer productId,
@@ -1106,7 +1109,7 @@ public class PosServiceImpl implements PosService {
     String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
     String orderIdStr = order.getTrackingNumber();
 
-    String adminReturnUrl = apiServerUrl + "/api/" + apiAdminVersion + "/pos/vnpay/callback";
+    String adminReturnUrl = frontendAdminUrl + "/pos/payment-result";
     long amountInVnd = totalAmount.longValue();
     String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr, adminReturnUrl);
 
@@ -1149,7 +1152,7 @@ public class PosServiceImpl implements PosService {
     String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
     String orderIdStr = order.getTrackingNumber();
 
-    String adminReturnUrl = apiServerUrl + "/api/" + apiAdminVersion + "/pos/vnpay/callback";
+    String adminReturnUrl = frontendAdminUrl + "/pos/payment-result";
     long amountInVnd = totalAmount.longValue();
     String paymentUrl = vnPayService.createPaymentUrl(amountInVnd, orderInfo, ipAddr, orderIdStr, adminReturnUrl);
     String qrCodeUrl = vnPayService.generateQrCode(paymentUrl);

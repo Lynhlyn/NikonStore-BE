@@ -49,7 +49,8 @@ public class SecurityConfig {
                         "/api/v1/admin/auth/login",
                         "/api/v1/admin/auth/forgot-password",
                         "/api/v1/admin/auth/reset-password",
-                        "/api/v1/admin/auth/validate-reset-token")
+                        "/api/v1/admin/auth/validate-reset-token",
+                        "/api/v1/admin/pos/vnpay/callback")
                     .permitAll()
                     .requestMatchers("/api/v1/admin/**")
                     .hasAnyAuthority(UserRole.main.name(), UserRole.staff.name())
