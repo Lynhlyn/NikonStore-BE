@@ -247,10 +247,14 @@ public class EmailService {
   @Async
   public void sendForgotPasswordEmail(String email, String fullName, String resetToken) {
     try {
+      String resetUrl = frontendUrl + "/reset-password?token=" + resetToken;
+
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("name", fullName);
       templateData.put("fullName", fullName);
       templateData.put("resetToken", resetToken);
+      templateData.put("resetUrl", resetUrl);
+      templateData.put("resetLink", resetUrl);
       templateData.put("frontendUrl", frontendUrl);
 
       sendTemplateEmailWithFallback(

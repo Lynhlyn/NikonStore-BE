@@ -73,10 +73,13 @@ public class CustomerServiceImpl implements CustomerService {
     validateAdminCreateRequest(dto);
 
     Customer customer = customerMapper.toEntity(dto);
-    // Auto-generate password from phone number
-    customer.setPassword(passwordEncoder.encode(dto.getPhoneNumber()));
+    
+    if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+      customer.setPassword(passwordEncoder.encode(dto.getPassword().trim()));
+    } else {
+      customer.setPassword(passwordEncoder.encode(dto.getPhoneNumber()));
+    }
 
-    // Auto-generate username from phone number + timestamp if not provided
     if (dto.getUsername() == null || dto.getUsername().trim().isEmpty()) {
       String basePhone = dto.getPhoneNumber() != null ? dto.getPhoneNumber().trim() : "user";
       String generated = basePhone + System.currentTimeMillis();
@@ -89,7 +92,6 @@ public class CustomerServiceImpl implements CustomerService {
       customer.setUsername(dto.getUsername().trim());
     }
 
-    // Auto-generate fullName from email if not provided
     if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
       if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
         String emailPrefix = dto.getEmail().split("@")[0];
@@ -366,17 +368,17 @@ public class CustomerServiceImpl implements CustomerService {
 
     if (dto.getUsername() != null
         && customerRepository.existsByUsernameAndIdNot(dto.getUsername(), customerId)) {
-      errors.put("username", "Username already exists");
+      errors.put("username", "Tên đăng nhập đã tồn tại trong hệ thống");
     }
 
     if (dto.getEmail() != null
         && customerRepository.existsByEmailAndIdNot(dto.getEmail(), customerId)) {
-      errors.put("email", "Email already exists");
+      errors.put("email", "Email đã tồn tại trong hệ thống");
     }
 
     if (dto.getPhoneNumber() != null
         && customerRepository.existsByPhoneNumberAndIdNot(dto.getPhoneNumber(), customerId)) {
-      errors.put("phoneNumber", "Phone number already exists");
+      errors.put("phoneNumber", "Số điện thoại đã tồn tại trong hệ thống");
     }
 
     if (!errors.isEmpty()) {
@@ -387,33 +389,28 @@ public class CustomerServiceImpl implements CustomerService {
   private void validateAdminCreateRequest(CreateCustomerDTO dto) {
     Map<String, String> errors = new HashMap<>();
 
-    // Validate username only if provided
     if (dto.getUsername() != null && !dto.getUsername().trim().isEmpty()) {
       if (customerRepository.existsByUsername(dto.getUsername().trim())) {
-        errors.put("username", "Username already exists");
+        errors.put("username", "Tên đăng nhập đã tồn tại trong hệ thống");
       }
     }
 
-    // Validate email (required)
     if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
       errors.put("email", "Email không được để trống.");
     } else if (customerRepository.existsByEmail(dto.getEmail().trim())) {
-      errors.put("email", "Email already exists");
+      errors.put("email", "Email đã tồn tại trong hệ thống");
     }
 
-    // Validate phone number (required)
     if (dto.getPhoneNumber() == null || dto.getPhoneNumber().trim().isEmpty()) {
       errors.put("phoneNumber", "Số điện thoại không được để trống.");
     } else if (customerRepository.existsByPhoneNumber(dto.getPhoneNumber().trim())) {
-      errors.put("phoneNumber", "Phone number already exists");
+      errors.put("phoneNumber", "Số điện thoại đã tồn tại trong hệ thống");
     }
 
-    // Validate status
     if (dto.getStatus() == null) {
       errors.put("status", "Trạng thái không được để trống.");
     }
 
-    // Validate date of birth
     if (dto.getDateOfBirth() != null && dto.getDateOfBirth().isAfter(LocalDate.now())) {
       errors.put("dateOfBirth", "Ngày sinh không được sau thời gian hiện tại");
     }

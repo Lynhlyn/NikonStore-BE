@@ -19,6 +19,7 @@ public class CreateCustomerDTO {
   private String email;
   private String fullName;
   private String phoneNumber;
+  private String password;
   private LocalDate dateOfBirth;
   @Builder.Default private String gender = "null";
   @Builder.Default private Boolean isGuest = false;
