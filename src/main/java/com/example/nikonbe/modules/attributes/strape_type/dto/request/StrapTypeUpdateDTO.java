@@ -12,14 +12,14 @@ import lombok.*;
 @NoArgsConstructor
 @Schema(description = "Đối tượng yêu cầu cập nhật loại dây đeo")
 public class StrapTypeUpdateDTO {
-  @NotBlank(message = "Strap type name is required")
+  @NotBlank(message = "Tên loại dây đeo là bắt buộc")
   @Schema(description = "Tên loại dây đeo", example = "Dây da", required = true)
   private String name;
 
   @Schema(description = "Mô tả loại dây đeo", example = "Dây da cao cấp")
   private String description;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(
       description = "Trạng thái loại dây đeo",
       example = "ACTIVE",

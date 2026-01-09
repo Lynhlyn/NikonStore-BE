@@ -12,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @Schema(description = "Đối tượng yêu cầu cập nhật danh mục")
 public class CategoryUpdateDTO {
-  @NotBlank(message = "Category name is required")
+  @NotBlank(message = "Tên danh mục là bắt buộc")
   @Schema(description = "Tên danh mục", example = "Máy ảnh Updated", required = true)
   private String name;
 
@@ -22,7 +22,7 @@ public class CategoryUpdateDTO {
   @Schema(description = "Mô tả danh mục", example = "Mô tả mới cho danh mục")
   private String description;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(
       description = "Trạng thái danh mục",
       example = "ACTIVE",

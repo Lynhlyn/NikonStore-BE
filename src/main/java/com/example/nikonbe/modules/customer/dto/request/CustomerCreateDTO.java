@@ -15,28 +15,28 @@ import lombok.*;
 @Schema(description = "Request DTO for creating a new customer")
 public class CustomerCreateDTO {
 
-  @NotBlank(message = "Username is required")
-  @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+  @NotBlank(message = "Tên đăng nhập là bắt buộc")
+  @Size(min = 3, max = 50, message = "Tên đăng nhập phải từ 3 đến 50 ký tự")
   @Schema(description = "Customer username", example = "john_doe", required = true)
   private String username;
 
-  @NotBlank(message = "Password is required")
-  @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
+  @NotBlank(message = "Mật khẩu là bắt buộc")
+  @Size(min = 6, max = 100, message = "Mật khẩu phải từ 6 đến 100 ký tự")
   @Schema(description = "Customer password", example = "password123", required = true)
   private String password;
 
-  @NotBlank(message = "Email is required")
-  @Email(message = "Email format is invalid")
+  @NotBlank(message = "Email là bắt buộc")
+  @Email(message = "Email không hợp lệ")
   @Schema(description = "Customer email", example = "john@example.com", required = true)
   private String email;
 
-  @NotBlank(message = "Full name is required")
-  @Size(max = 255, message = "Full name must not exceed 255 characters")
+  @NotBlank(message = "Họ và tên là bắt buộc")
+  @Size(max = 255, message = "Họ và tên không được vượt quá 255 ký tự")
   @Schema(description = "Customer full name", example = "John Doe", required = true)
   private String fullName;
 
-  @NotBlank(message = "Phone number is required")
-  @Size(max = 20, message = "Phone number must not exceed 20 characters")
+  @NotBlank(message = "Số điện thoại là bắt buộc")
+  @Size(max = 20, message = "Số điện thoại không được vượt quá 20 ký tự")
   @Schema(description = "Customer phone number", example = "0123456789", required = true)
   private String phoneNumber;
 
@@ -55,7 +55,7 @@ public class CustomerCreateDTO {
   @Schema(description = "Whether customer is guest", example = "false")
   private Boolean isGuest;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(description = "Customer status", example = "ACTIVE", required = true)
   private Status status;
 }

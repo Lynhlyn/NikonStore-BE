@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "Đối tượng yêu cầu tạo mới thương hiệu")
 public class BrandCreateDTO {
-  @NotBlank(message = "Brand name is required")
+  @NotBlank(message = "Tên thương hiệu là bắt buộc")
   @Schema(description = "Tên thương hiệu", example = "Nikon", required = true)
   private String name;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(description = "Trạng thái thương hiệu", example = "ACTIVE", required = true)
   private Status status;
 }

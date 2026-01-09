@@ -12,11 +12,11 @@ import lombok.*;
 @NoArgsConstructor
 @Schema(description = "Đối tượng yêu cầu tạo mới dung tích")
 public class CapacityCreateDTO {
-  @NotBlank(message = "Capacity name is required")
+  @NotBlank(message = "Tên dung tích là bắt buộc")
   @Schema(description = "Tên dung tích", example = "20L", required = true)
   private String name;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(description = "Trạng thái dung tích", example = "ACTIVE", required = true)
   private Status status;
 

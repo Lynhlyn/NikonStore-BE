@@ -12,14 +12,14 @@ import lombok.*;
 @NoArgsConstructor
 @Schema(description = "Đối tượng yêu cầu tạo mới chất liệu")
 public class MaterialCreateDTO {
-  @NotBlank(message = "Material name is required")
+  @NotBlank(message = "Tên chất liệu là bắt buộc")
   @Schema(description = "Tên chất liệu", example = "Da", required = true)
   private String name;
 
   @Schema(description = "Mô tả chất liệu", example = "Chất liệu da cao cấp")
   private String description;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(description = "Trạng thái chất liệu", example = "ACTIVE", required = true)
   private Status status;
 }

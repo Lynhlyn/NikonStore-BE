@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "Đối tượng yêu cầu tạo mới màu sắc")
 public class ColorCreateDTO {
-  @NotBlank(message = "Color name is required")
+  @NotBlank(message = "Tên màu sắc là bắt buộc")
   @Schema(description = "Tên màu sắc", example = "Red", required = true)
   private String name;
 
   @Schema(description = "Mã màu hex", example = "#FF0000")
   private String hexCode;
 
-  @NotNull(message = "Status is required")
+  @NotNull(message = "Trạng thái là bắt buộc")
   @Schema(description = "Trạng thái màu sắc", example = "ACTIVE", required = true)
   private Status status;
 }
