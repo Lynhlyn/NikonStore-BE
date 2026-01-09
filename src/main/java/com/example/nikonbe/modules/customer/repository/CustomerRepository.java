@@ -41,17 +41,17 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
   @Query(
       "SELECT c FROM Customer c WHERE "
-          + "(:keyword IS NULL OR "
+          + "c.status != com.example.nikonbe.common.enums.Status.DELETED "
+          + "AND (:keyword IS NULL OR "
           + "LOWER(c.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(c.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
-          + "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
+          + "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) "
           + "AND (:status IS NULL OR c.status = :status) "
           + "AND (:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%'))) "
           + "AND (:phoneNumber IS NULL OR c.phoneNumber LIKE CONCAT('%', :phoneNumber, '%')) "
           + "AND (:fullName IS NULL OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) "
-          + "AND (:gender IS NULL OR LOWER(c.gender) LIKE LOWER(CONCAT('%', :gender, '%'))) "
-          + "AND (:provider IS NULL OR LOWER(c.provider) = LOWER(:provider)) "
+          + "AND (:gender IS NULL OR c.gender = :gender) "
           + "AND (:isGuest IS NULL OR c.isGuest = :isGuest) "
           + "AND (:createdFromDate IS NULL OR DATE(c.createdAt) >= :createdFromDate) "
           + "AND (:createdToDate IS NULL OR DATE(c.createdAt) <= :createdToDate)")
@@ -62,7 +62,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
       @Param("phoneNumber") String phoneNumber,
       @Param("fullName") String fullName,
       @Param("gender") String gender,
-      @Param("provider") String provider,
       @Param("isGuest") Boolean isGuest,
       @Param("createdFromDate") LocalDate createdFromDate,
       @Param("createdToDate") LocalDate createdToDate,
@@ -70,7 +69,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
   @Query(
       "SELECT c FROM Customer c WHERE "
-          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "c.status != com.example.nikonbe.common.enums.Status.DELETED "
+          + "AND (:keyword IS NULL OR :keyword = '' OR "
           + "LOWER(c.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(c.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(c.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "

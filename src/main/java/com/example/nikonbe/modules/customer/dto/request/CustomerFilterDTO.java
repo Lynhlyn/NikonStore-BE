@@ -38,9 +38,6 @@ public class CustomerFilterDTO {
       allowableValues = {"Male", "Female", "Other"})
   private String gender;
 
-  @Schema(description = "Filter by OAuth provider", example = "LOCAL")
-  private String provider;
-
   @Schema(description = "Filter by guest status", example = "false")
   private Boolean isGuest;
 

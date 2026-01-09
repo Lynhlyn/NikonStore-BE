@@ -229,7 +229,6 @@ public class CustomerServiceImpl implements CustomerService {
             filterDTO.getPhoneNumber(),
             filterDTO.getFullName(),
             filterDTO.getGender(),
-            filterDTO.getProvider(),
             filterDTO.getIsGuest(),
             filterDTO.getCreatedFromDate(),
             filterDTO.getCreatedToDate(),
