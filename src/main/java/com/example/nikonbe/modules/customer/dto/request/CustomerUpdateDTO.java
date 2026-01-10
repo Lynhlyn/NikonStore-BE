@@ -27,6 +27,7 @@ public class CustomerUpdateDTO {
 
   @NotBlank(message = "Họ và tên là bắt buộc")
   @Size(max = 255, message = "Họ và tên không được vượt quá 255 ký tự")
+  @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-ZÀ-ỹ\\s]+$", message = "Họ và tên chỉ được chứa chữ cái và khoảng trắng")
   @Schema(description = "Customer full name", example = "John Doe Updated", required = true)
   private String fullName;
 
