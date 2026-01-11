@@ -7,13 +7,19 @@ import com.example.nikonbe.common.utils.ResponseUtils;
 import com.example.nikonbe.modules.product_detail.dto.request.ProductDetailCreateDTO;
 import com.example.nikonbe.modules.product_detail.dto.request.ProductDetailUpdateDTO;
 import com.example.nikonbe.modules.product_detail.dto.response.ProductDetailResponseDTO;
+import com.example.nikonbe.modules.product_detail.service.impl.ProductDetailExcelExportService;
 import com.example.nikonbe.modules.product_detail.service.interF.ProductDetailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,9 +29,12 @@ import org.springframework.web.bind.annotation.*;
 public class ProductDetailAdminController {
 
   private final ProductDetailService service;
+  private final ProductDetailExcelExportService excelExportService;
 
-  public ProductDetailAdminController(ProductDetailService service) {
+  public ProductDetailAdminController(
+      ProductDetailService service, ProductDetailExcelExportService excelExportService) {
     this.service = service;
+    this.excelExportService = excelExportService;
   }
 
   @PostMapping
@@ -76,4 +85,32 @@ public class ProductDetailAdminController {
     service.delete(id);
     return ResponseUtils.success(null, "Xóa biến thể thành công");
   }
+
+  @GetMapping("/export/excel")
+  @Operation(summary = "Xuất Excel danh sách sản phẩm chi tiết")
+  public ResponseEntity<byte[]> exportProductDetailsToExcel(
+      @RequestParam(required = false) String sku,
+      @RequestParam(required = false) Status status,
+      @RequestParam(required = false) Integer productId,
+      @RequestParam(required = false) Integer colorId,
+      @RequestParam(required = false) Integer capacityId) {
+    try {
+      byte[] excelData =
+          excelExportService.exportProductDetailsToExcel(
+              sku, status, productId, colorId, capacityId);
+
+      String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+      String filename = "DanhSachSanPhamChiTiet_" + timestamp + ".xlsx";
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+      headers.setContentDispositionFormData("attachment", filename);
+      headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+      return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
+    } catch (IOException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
 }
+
