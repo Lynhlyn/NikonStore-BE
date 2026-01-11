@@ -192,9 +192,22 @@ public class EmailService {
       templateData.put("customerName", customerName);
       templateData.put("voucherCode", voucherCode);
       templateData.put("description", description);
-      templateData.put("discountValue", discountValue);
-      templateData.put("discountType", discountType);
-      templateData.put("endDate", endDate);
+      
+      // Format discount value với % hoặc đ
+      String formattedDiscount;
+      if ("percentage".equalsIgnoreCase(discountType)) {
+        formattedDiscount = discountValue + "%";
+      } else {
+        // Format số tiền với dấu phân cách hàng nghìn và thêm đ
+        formattedDiscount = String.format("%,d", discountValue.longValue()) + "đ";
+      }
+      templateData.put("discountValue", formattedDiscount);
+      
+      // Format thời gian sang dạng dễ đọc: dd/MM/yyyy HH:mm
+      String formattedEndDate = endDate.format(
+        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+      );
+      templateData.put("endDate", formattedEndDate);
       templateData.put("frontendUrl", frontendUrl);
 
       templateEmailService.sendTemplateEmail(EmailAction.VOUCHER_ASSIGNED, email, templateData);
