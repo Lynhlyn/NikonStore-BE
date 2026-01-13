@@ -119,7 +119,7 @@ public class CustomerController {
       @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc")
+      @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc")
           String direction) {
 
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);

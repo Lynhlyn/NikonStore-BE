@@ -95,8 +95,8 @@ public class TagAdminController {
       @Parameter(description = "Sắp xếp theo trường", example = "name")
           @RequestParam(defaultValue = "name")
           String sort,
-      @Parameter(description = "Hướng sắp xếp (asc/desc)", example = "asc")
-          @RequestParam(defaultValue = "asc")
+      @Parameter(description = "Hướng sắp xếp (asc/desc)", example = "desc")
+          @RequestParam(defaultValue = "desc")
           String direction) {
 
     if (isAll) {

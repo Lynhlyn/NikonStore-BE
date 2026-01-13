@@ -72,7 +72,7 @@ public class ProductController {
       @Parameter(description = "Số sản phẩm trên mỗi trang") @RequestParam(defaultValue = "12")
           int size,
       @Parameter(description = "Trường sắp xếp") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Hướng sắp xếp (asc/desc)") @RequestParam(defaultValue = "asc")
+      @Parameter(description = "Hướng sắp xếp (asc/desc)") @RequestParam(defaultValue = "desc")
           String direction) {
 
     Pageable pageable = PaginationUtils.createPageable(page, size, sort, direction);

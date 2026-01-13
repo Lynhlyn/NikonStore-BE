@@ -38,7 +38,10 @@ public class PosOrderDetailResponse {
   @Schema(description = "Số lượng", example = "2")
   private Integer quantity;
 
-  @Schema(description = "Giá gốc (lấy từ product detail)", example = "24990000")
+  @Schema(description = "Giá gốc từ product detail (chưa áp dụng promotion)", example = "3000000")
+  private BigDecimal originalPrice;
+
+  @Schema(description = "Giá sau khi áp dụng promotion (hoặc bằng giá gốc nếu không có promotion)", example = "1800000")
   private BigDecimal price;
 
   @Schema(

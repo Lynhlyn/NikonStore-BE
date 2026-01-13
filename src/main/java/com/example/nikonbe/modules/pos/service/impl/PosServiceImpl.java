@@ -32,6 +32,8 @@ import com.example.nikonbe.modules.product.mapper.ProductMapper;
 import com.example.nikonbe.modules.product.repository.ProductRepository;
 import com.example.nikonbe.modules.product_detail.entity.ProductDetail;
 import com.example.nikonbe.modules.product_detail.repository.ProductDetailRepository;
+import com.example.nikonbe.modules.promotion.dto.response.PromotionResponseDTO;
+import com.example.nikonbe.modules.promotion.entity.Promotion;
 import com.example.nikonbe.modules.promotion.service.interF.PromotionService;
 import com.example.nikonbe.modules.staff.dto.response.StaffResponseDTO;
 import com.example.nikonbe.modules.staff.entity.Staff;
@@ -868,8 +870,23 @@ public class PosServiceImpl implements PosService {
       }
     }
 
+    BigDecimal originalPrice = productDetail.getPrice();
     BigDecimal totalAmount =
         orderDetail.getPrice().multiply(BigDecimal.valueOf(orderDetail.getQuantity()));
+
+    Promotion promotion = productDetail.getPromotion();
+    PromotionResponseDTO promotionResponse = null;
+    
+    if (promotion != null) {
+      LocalDateTime now = LocalDateTime.now();
+      boolean isPromotionActive = Status.ACTIVE.equals(promotion.getStatus())
+          && !promotion.getStartDate().isAfter(now)
+          && !promotion.getEndDate().isBefore(now);
+      
+      if (isPromotionActive) {
+        promotionResponse = mapToPromotionResponse(promotion);
+      }
+    }
 
     return PosOrderDetailResponse.builder()
         .id(orderDetail.getId())
@@ -884,13 +901,11 @@ public class PosServiceImpl implements PosService {
                 ? mapToCapacityResponse(productDetail.getCapacity())
                 : null)
         .quantity(orderDetail.getQuantity())
-        .price(productDetail.getPrice())
+        .originalPrice(originalPrice)
+        .price(orderDetail.getPrice())
         .discount(orderDetail.getDiscount() != null ? orderDetail.getDiscount() : BigDecimal.ZERO)
         .totalAmount(totalAmount)
-        .promotion(
-            productDetail.getPromotion() != null
-                ? mapToPromotionResponse(productDetail.getPromotion())
-                : null)
+        .promotion(promotionResponse)
         .thumbnailImage(thumbnailImage)
         .build();
   }

@@ -91,7 +91,7 @@ public class ContentTagAdminController {
       @Parameter(description = "Số trang") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Sắp xếp theo") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "asc")
+      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "desc")
           String direction) {
 
     if (isAll) {

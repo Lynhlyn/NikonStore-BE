@@ -61,7 +61,7 @@ public class VoucherController {
       @Parameter(description = "Loại giảm giá") @RequestParam(required = false) String discountType,
       @Parameter(description = "Sắp xếp theo") @RequestParam(defaultValue = "endDate")
           String sortBy,
-      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "asc") String sortDir,
+      @Parameter(description = "Hướng sắp xếp") @RequestParam(defaultValue = "desc") String sortDir,
       @Parameter(description = "Số trang") @RequestParam(defaultValue = "0") int page,
       @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size) {
 

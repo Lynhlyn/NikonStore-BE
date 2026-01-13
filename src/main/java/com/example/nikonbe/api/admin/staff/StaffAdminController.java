@@ -118,7 +118,7 @@ public class StaffAdminController {
           int page,
       @Parameter(description = "Kích thước trang") @RequestParam(defaultValue = "10") int size,
       @Parameter(description = "Trường sắp xếp") @RequestParam(defaultValue = "id") String sort,
-      @Parameter(description = "Hướng sắp xếp (asc/desc)") @RequestParam(defaultValue = "asc")
+      @Parameter(description = "Hướng sắp xếp (asc/desc)") @RequestParam(defaultValue = "desc")
           String direction) {
 
     if (isAll) {
