@@ -41,8 +41,10 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
 
   @Query(
       "SELECT s FROM Staff s WHERE "
-          + "(:fullName IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) AND "
-          + "(:phoneNumber IS NULL OR LOWER(s.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%'))) AND "
+          + "((:fullName IS NULL AND :phoneNumber IS NULL) OR "
+          + "(:fullName IS NOT NULL AND :phoneNumber IS NULL AND LOWER(s.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) OR "
+          + "(:fullName IS NULL AND :phoneNumber IS NOT NULL AND LOWER(s.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%'))) OR "
+          + "(:fullName IS NOT NULL AND :phoneNumber IS NOT NULL AND (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')) OR LOWER(s.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%'))))) AND "
           + "(:role IS NULL OR s.role = :role) AND "
           + "(:status IS NULL OR s.status = :status)")
   List<Staff> findAllByFilters(
@@ -53,8 +55,10 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
 
   @Query(
       "SELECT s FROM Staff s WHERE "
-          + "(:fullName IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) AND "
-          + "(:phoneNumber IS NULL OR LOWER(s.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%'))) AND "
+          + "((:fullName IS NULL AND :phoneNumber IS NULL) OR "
+          + "(:fullName IS NOT NULL AND :phoneNumber IS NULL AND LOWER(s.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) OR "
+          + "(:fullName IS NULL AND :phoneNumber IS NOT NULL AND LOWER(s.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%'))) OR "
+          + "(:fullName IS NOT NULL AND :phoneNumber IS NOT NULL AND (LOWER(s.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')) OR LOWER(s.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%'))))) AND "
           + "(:role IS NULL OR s.role = :role) AND "
           + "(:status IS NULL OR s.status = :status)")
   Page<Staff> findAllByFiltersPaginated(
