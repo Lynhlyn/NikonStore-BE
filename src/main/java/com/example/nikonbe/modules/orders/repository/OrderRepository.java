@@ -41,7 +41,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
       @Param("toDate") java.time.LocalDate toDate,
       Pageable pageable);
 
-  @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.id = :orderId")
+  @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails LEFT JOIN FETCH o.voucher LEFT JOIN FETCH o.customer WHERE o.id = :orderId")
   Optional<Order> findByIdWithDetails(@Param("orderId") Integer orderId);
 
   Optional<Order> findByTrackingNumber(String trackingNumber);

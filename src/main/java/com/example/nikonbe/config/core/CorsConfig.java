@@ -23,6 +23,9 @@ public class CorsConfig {
     "https://nikon-store-gamma-dev.vercel.app",
     "https://hide-cons-bailey-ages.trycloudflare.com",
     "https://pdas-lenders-orchestra-transmitted.trycloudflare.com",
+    "https://memoria.jungnguyen.io.vn",
+    "https://memoria-ad.jungnguyen.io.vn",
+    "https://herein-surveillance-rack-temporal.trycloudflare.com"
   };
 
   private static final String[] DYNAMIC_PATTERNS = {

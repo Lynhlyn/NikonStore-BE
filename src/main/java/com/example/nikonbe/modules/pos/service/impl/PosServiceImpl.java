@@ -523,6 +523,20 @@ public class PosServiceImpl implements PosService {
       order.setRecipientEmail(customer.getEmail());
     }
 
+    if (request.getVoucherId() != null) {
+      Voucher voucher =
+          voucherRepository
+              .findById(request.getVoucherId().longValue())
+              .orElseThrow(
+                  () -> new ResourceNotFoundException("Voucher", "id", request.getVoucherId()));
+      order.setVoucher(voucher);
+      log.info("Updated order {} with voucher: {}", order.getId(), voucher.getCode());
+    } else if (request.getVoucherId() == null && order.getVoucher() != null) {
+      // Remove voucher if voucherId is explicitly null
+      log.info("Removing voucher from order {}", order.getId());
+      order.setVoucher(null);
+    }
+
     if (request.getPaymentMethod() != null) {
       order.setPaymentMethod(request.getPaymentMethod());
     }
@@ -1161,8 +1175,23 @@ public class PosServiceImpl implements PosService {
       context = "main";
     }
 
+    // DEBUG: Log order info before recalculate
+    BigDecimal subtotalBeforeRecalc = calculateOrderSubtotal(order);
+    String voucherCode = order.getVoucher() != null ? order.getVoucher().getCode() : "NULL";
+    BigDecimal totalBeforeRecalc = order.getTotalAmount();
+    log.info("[QR DEBUG] Order {} BEFORE recalculate - Voucher: {}, Subtotal: {}, TotalAmount: {}",
+        orderId, voucherCode, subtotalBeforeRecalc, totalBeforeRecalc);
+
     recalculateOrderAmounts(order);
     BigDecimal totalAmount = order.getTotalAmount();
+
+    // DEBUG: Log order info after recalculate
+    BigDecimal voucherDiscount = BigDecimal.ZERO;
+    if (order.getVoucher() != null) {
+      voucherDiscount = calculateVoucherDiscount(subtotalBeforeRecalc, order.getVoucher());
+    }
+    log.info("[QR DEBUG] Order {} AFTER recalculate - VoucherDiscount: {}, TotalAmount: {}, AmountInVnd: {}",
+        orderId, voucherDiscount, totalAmount, totalAmount.longValue());
 
     String orderInfo = "Thanh toan don hang POS " + order.getTrackingNumber();
     String orderIdStr = order.getTrackingNumber();
