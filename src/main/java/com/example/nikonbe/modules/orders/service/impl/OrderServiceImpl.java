@@ -432,6 +432,13 @@ public class OrderServiceImpl implements OrderService {
       savedOrder.setPaymentStatus("PENDING");
       createOrderHistoryRecord(savedOrder, customer);
     }
+
+    if (voucher != null) {
+      Integer usedCount = voucher.getUsedCount() != null ? voucher.getUsedCount() : 0;
+      voucher.setUsedCount(usedCount + 1);
+      voucherRepository.save(voucher);
+    }
+
     orderRepository.save(savedOrder);
 
     try {
@@ -519,6 +526,12 @@ public class OrderServiceImpl implements OrderService {
       savedOrder.setStatus(Status.PENDING_CONFIRMATION);
       savedOrder.setPaymentStatus("PENDING");
       createOrderHistoryRecord(savedOrder, customer);
+    }
+
+    if (voucher != null) {
+      Integer usedCount = voucher.getUsedCount() != null ? voucher.getUsedCount() : 0;
+      voucher.setUsedCount(usedCount + 1);
+      voucherRepository.save(voucher);
     }
 
     orderRepository.save(savedOrder);

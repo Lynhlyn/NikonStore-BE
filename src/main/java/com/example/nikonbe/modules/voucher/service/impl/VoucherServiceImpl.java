@@ -658,6 +658,13 @@ public class VoucherServiceImpl implements VoucherService {
       return false;
     }
 
+    Integer usedCount = voucher.getUsedCount() != null ? voucher.getUsedCount() : 0;
+    if (usedCount >= voucher.getQuantity()) {
+      log.debug("Voucher {} not available: used count ({}) >= quantity ({})", 
+          voucher.getCode(), usedCount, voucher.getQuantity());
+      return false;
+    }
+
     if (!voucher.getIsPublic()) {
       boolean hasAccess =
           customerVoucherRepository.existsByIdCustomerIdAndIdVoucherId(customerId, voucher.getId());

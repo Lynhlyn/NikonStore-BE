@@ -22,7 +22,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
   boolean existsByCodeAndIdNot(String code, Long id);
 
   @Query(
-      "SELECT v FROM Voucher v WHERE v.status = com.example.nikonbe.common.enums.Status.ACTIVE AND v.isPublic = true AND v.startDate <= :now AND v.endDate >= :now")
+      "SELECT v FROM Voucher v WHERE v.status = com.example.nikonbe.common.enums.Status.ACTIVE AND v.isPublic = true AND v.startDate <= :now AND v.endDate >= :now AND (v.usedCount IS NULL OR v.usedCount < v.quantity)")
   List<Voucher> findPublicActiveVouchers(@Param("now") LocalDateTime now);
 
   @Query(
